@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="colorPrimary">#3f78b5</color>
+    <color name="colorPrimaryDark">#304e9f</color>
+    <color name="colorAccent">#ff6d24</color>
+
+    <color name="grey" >#808080</color>
+    <color name="black" >#000000</color>
+
+    <color name="unavailable_button_color">@color/grey</color>
+    <color name="available_button_color">@color/colorAccent</color>
+    <color name="route_background">@color/colorPrimaryDark</color>
+
+    <color name="shadow">#95a3a4</color>
+</resources>

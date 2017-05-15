@@ -1,0 +1,29 @@
+<resources>
+    <string name="app_name">Inzynierka</string>
+    <string name="google_maps_key">AIzaSyBLqxBSOHnvFVnkeQA8Wf7z8rYcP1cxG8U</string> <!-- place api key -->
+    <!--<string name="google_maps_key">AIzaSyA6NN5-5Qa22ZXbOWK-JeNdlqZfL-P1gNc</string> &lt;!&ndash; maps key &ndash;&gt;-->
+    <string name="no_routes_added">Nie dodałeś jeszcze żadnej trasy. Aby to zrobić kliknij w przycisk dodawania nowej trasy.</string>
+    <string name="route_name">Nazwa Trasy</string>
+    <string name="about_route_name_edittext">Wpisz nazwę trasy aby poźniej łatwo ją rozpoznać</string>
+    <string name="about_route_time_edittext">Wybierz czas w jakim będziesz mógł odbyć trasę</string>
+    <string name="start_time">Czas startu</string>
+    <string name="end_time">Czas zakończenia</string>
+    <string name="time_choosen_is_invalid">Wybrany czas jest niepoprawny (czas startu nie może być późniejszy niż czas zakończenia)</string>
+    <string name="add_update_route">Dodaj/Zmień trasę</string>
+    <string name="no_points_in_route">Nie dodano żadnych punktów do trasy. Dodaj je klikając w trasę.</string>
+    <string name="are_you_sure_you_want_to_delete_this_route">Czy jesteś pewien że chcesz usunąć tą trasę?</string>
+    <string name="are_you_sure">Czy jesteś pewien?</string>
+    <string name="yes">tak</string>
+    <string name="no">nie</string>
+    <string name="add_new_route">Dodaj nową trasę</string>
+    <string name="no_route_points_added">Nie dodano jeszcze żadnych nowych punktów trasy. Dodaj je aby wyznaczyć optymalną trasę.</string>
+    <string name="add_new_route_point">Dodaj nowy punkt trasy</string>
+    <string name="add_update_route_point">Dodaj/Zmień punkt trasy</string>
+    <string name="about_route_point_time_edittext">Wybierz czas w jakim chcesz odwiedzić ten punkt.</string>
+    <string name="choose_localization_of_point">Wybierz lokalizację punktu</string>
+    <string name="choose_from_last_picked_locations">Wybierz z ostatnio wybieranych lokalizacji</string>
+    <string name="add_and_continue">Dodaj i kontynuuj</string>
+    <string name="add_and_finish">Dodaj i zakończ</string>
+    <string name="are_you_sure_you_want_to_delete_this_route_point">Czy jesteś pewien że chcesz usunąć ten punkt trasy?</string>
+    <string name="no_route_points_lately_added">Nie dodałeś jeszcze żadnych punktów lub wyczyściłeś dane aplikacji. Dodawaj punkty abyś mógł poźniej wybierać je szybko z listy.</string>
+</resources>

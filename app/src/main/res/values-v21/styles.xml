@@ -1,0 +1,21 @@
+<resources>
+
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+        <item name="android:windowDrawsSystemBarBackgrounds">true</item>
+        <item name="android:statusBarColor">@android:color/transparent</item>
+    </style>
+
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button.Colored">
+
+    </style>
+
+    <style name="ButtonStyle.Unavailable">
+        <item name="android:colorButtonNormal">@color/unavailable_button_color</item>
+    </style>
+
+    <style name="ButtonStyle.Available">
+        <item name="android:colorButtonNormal">@color/available_button_color</item>
+    </style>
+</resources>

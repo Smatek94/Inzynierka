@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content">
+
+    <TextView
+        android:text="@string/about_route_point_time_edittext"
+        style="@style/TextViewStyle.Medium.Bold"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
+    <include android:id="@+id/start_time_layout"
+        layout="@layout/time_layout"/>
+
+    <include android:id="@+id/end_time_layout"
+        layout="@layout/time_layout"/>
+
+</LinearLayout>

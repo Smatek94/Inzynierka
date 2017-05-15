@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?><!--ROUTE POINTS LAYOUT-->
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/route_point_view"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin">
+
+    <!--ROUTE POINTS ICONS-->
+    <RelativeLayout
+        android:id="@+id/route_points_icons_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true">
+
+        <ImageView
+            android:id="@+id/move_down_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_expand" />
+
+        <ImageView
+            android:id="@+id/move_up_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:layout_centerVertical="true"
+            android:rotation="180"
+            android:layout_toRightOf="@id/move_down_route_point_imageview"
+            android:src="@mipmap/ic_expand" />
+
+        <ImageView
+            android:id="@+id/edit_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/move_up_route_point_imageview"
+            android:src="@mipmap/ic_edit" />
+
+        <ImageView
+            android:id="@+id/delete_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/edit_route_point_imageview"
+            android:src="@mipmap/ic_delete" />
+
+    </RelativeLayout>
+
+    <!--ROUTE POINTS TEXTVIEWS-->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/route_points_icons_layout">
+
+        <TextView
+            android:id="@+id/route_points_name_textview"
+            style="@style/TextViewStyle.Medium.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/time_textview"
+            style="@style/TextViewStyle.Medium.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/route_points_name_textview" />
+    </RelativeLayout>
+</RelativeLayout>

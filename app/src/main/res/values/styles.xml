@@ -1,0 +1,56 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorAccent">@color/colorAccent</item>
+    </style>
+
+    <style name="ButtonStyle" parent="Widget.AppCompat.Button.Colored">
+
+    </style>
+
+    <style name="ButtonStyle.Unavailable">
+        <item name="colorButtonNormal">@color/unavailable_button_color</item>
+    </style>
+
+    <style name="ButtonStyle.Available">
+        <item name="colorButtonNormal">@color/available_button_color</item>
+    </style>
+
+    <style name="EditTextStyle">
+
+    </style>
+
+    <style name="TimeEditTextStyle"></style>
+
+    <style name="TextViewStyle">
+        <item name="android:textColor">@color/black</item>
+    </style>
+
+    <style name="TextViewStyle.Big">
+        <item name="android:textSize">@dimen/big_text_view_size</item>
+    </style>
+
+    <style name="TextViewStyle.Medium">
+        <item name="android:textSize">@dimen/medium_text_view_size</item>
+    </style>
+
+    <style name="TextViewStyle.Small">
+        <item name="android:textSize">@dimen/small_text_view_size</item>
+    </style>
+
+    <style name="TextViewStyle.Big.Bold">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextViewStyle.Medium.Bold">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+    <style name="TextViewStyle.Small.Bold">
+        <item name="android:textStyle">bold</item>
+    </style>
+
+</resources>

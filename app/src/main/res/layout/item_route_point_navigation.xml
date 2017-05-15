@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:paddingLeft="@dimen/activity_horizontal_margin"
+    android:paddingRight="@dimen/activity_horizontal_margin">
+
+    <!--ROUTE POINTS ICONS-->
+    <RelativeLayout
+        android:id="@+id/route_points_icons_layout"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
+        android:layout_centerVertical="true">
+
+        <CheckBox
+            android:id="@+id/route_point_visited_checkbox"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <ImageView
+            android:layout_toRightOf="@id/route_point_visited_checkbox"
+            android:id="@+id/navigate_to_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:rotation="90"
+            android:layout_centerVertical="true"
+            android:src="@mipmap/ic_navigate" />
+
+    </RelativeLayout>
+
+    <!--ROUTE POINTS TEXTVIEWS-->
+    <RelativeLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentLeft="true"
+        android:layout_toLeftOf="@id/route_points_icons_layout">
+
+        <TextView
+            android:id="@+id/route_points_name_textview"
+            style="@style/TextViewStyle.Medium.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content" />
+
+        <TextView
+            android:id="@+id/time_textview"
+            style="@style/TextViewStyle.Medium.Bold"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_below="@id/route_points_name_textview" />
+    </RelativeLayout>
+</RelativeLayout>

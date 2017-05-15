@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/activity_main"
+    android:layout_width="match_parent"
+    android:paddingTop="@dimen/activity_vertical_margin"
+    android:layout_height="match_parent"
+    tools:context="com.example.mateuszskolimowski.inzynierka.activities.routes_list.RoutesListActivity">
+
+    <TextView
+        android:id="@+id/no_routes_textview"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:paddingLeft="@dimen/activity_horizontal_margin"
+        android:paddingRight="@dimen/activity_horizontal_margin"
+        android:layout_centerInParent="true"
+        android:text="@string/no_routes_added" />
+
+    <Button
+        android:layout_marginLeft="@dimen/activity_horizontal_margin"
+        android:layout_marginRight="@dimen/activity_horizontal_margin"
+        android:id="@+id/add_route_button"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/add_new_route"
+        android:theme="@style/ButtonStyle.Available" />
+
+    <android.support.v7.widget.RecyclerView
+        android:id="@+id/routes_recycler_view"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_below="@id/add_route_button" />
+</RelativeLayout>
