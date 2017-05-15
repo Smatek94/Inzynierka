@@ -238,11 +238,10 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         if (latelyAddedRoutePointsDialog != null) {
             latelyAddedRoutePointsDialog.dismiss();
         }
-        autocompleteFragment.setText(selectedPlaceName);
-        autocompleteFragment.
         selectedPlaceLatLng = routePoint.getRoutePointLatLng();
         selectedPlaceId = routePoint.getRoutePointPlaceId();
         selectedPlaceName = routePoint.getRoutePointName() + "";
+        autocompleteFragment.setText(selectedPlaceName);
         checkIfAllInfoAvailable();
     }
 }

@@ -22,7 +22,7 @@ import static android.R.attr.id;
 
 public class SQLiteHelper extends SQLiteOpenHelper {
 
-    private static final int LATELY_ADDED_ROUTE_POINTS_LIMIT = 15;
+    private static final int LATELY_ADDED_ROUTE_POINTS_LIMIT = 5;
     private static final String DATABASE_NAME = SQLiteHelper.class.getName() + "ROUTES_DATABASE";
     private static final int DATA_BASE_VERSION = 1;
     private static final int DATABASE_OPEN_CONNECTION_NUMBER_OF_TRIES = 1;
@@ -38,10 +38,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
 
     private static final String LATELY_ADDED_ROUTE_POINTS_TABLE_NAME = "LATELY_ADDED_ROUTE_POINTS_TABLE_NAME";
     private static final String LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME = "LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME";
-    private static String LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME = "LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME";
+//    private static String LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME = "LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME";
     private static final String CREATE_LATELY_ADDED_ROUTE_POINTS_TABLE = "CREATE TABLE " + LATELY_ADDED_ROUTE_POINTS_TABLE_NAME +
             "(" + KEY_ID + " " + ID_OPTIONS + ", " +
-            LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME + " REAL, " +
+//            LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME + " REAL, " +
             LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME + " TEXT NOT NULL);";
 
 
@@ -152,35 +152,39 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
             ContentValues contentValues = new ContentValues();
             Gson gson = new Gson();
+            routePoint.setAddedDate(System.currentTimeMillis());
             contentValues.put(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME,gson.toJson(routePoint));
-            contentValues.put(LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME,System.currentTimeMillis());
+//            contentValues.put(LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME,System.currentTimeMillis());
             sqliteDatabase.insert(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,null,contentValues);
         }
     }
 
     private void deleteOldestRoutePoint(ArrayList<RoutePoint> latelyAddedRoutePoints) {
-        long minDate = 0;
+        long minDate = 99999999999999l;
         RoutePoint routePointToDelete = null;
         for(RoutePoint routePoint : latelyAddedRoutePoints){
-            if(routePoint.getDate() > minDate){
+            if(routePoint.getDate() < minDate){
                 minDate = routePoint.getDate();
                 routePointToDelete = routePoint;
             }
         }
-        if(routePointToDelete != null)
-            latelyAddedRoutePoints.remove(latelyAddedRoutePoints.indexOf(routePointToDelete));
+        if(routePointToDelete != null) {
+            Gson gson = new Gson();
+            sqliteDatabase.delete(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME + "=?" ,new String[]{gson.toJson(routePointToDelete)});
+        }
     }
 
     public ArrayList<RoutePoint> getLatelyAddedRoutePoints() {
         ArrayList<RoutePoint> resultList = new ArrayList<>();
         if(connectDataBase()){
-            String[] columns = {LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME,LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME};
+//            String[] columns = {LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME,LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME};
+            String[] columns = {LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME};
             Cursor cursor = sqliteDatabase.query(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,columns,null,null,null,null,null);
             if(cursor != null && cursor.moveToFirst()) {
                 do {
                     Gson gson = new Gson();
                     RoutePoint routePoint = gson.fromJson(cursor.getString(cursor.getColumnIndex(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME)), RoutePoint.class);
-                    routePoint.setAddedDate(cursor.getLong(cursor.getColumnIndex(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME)));
+//                    routePoint.setAddedDate(cursor.getLong(cursor.getColumnIndex(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME)));
                     resultList.add(routePoint);
                 } while (cursor.moveToNext());
             }
