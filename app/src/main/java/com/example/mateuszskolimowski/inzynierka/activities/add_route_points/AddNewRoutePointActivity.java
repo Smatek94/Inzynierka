@@ -7,11 +7,14 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.lately_added_route_points_dialog.LatelyAddedRoutePointsDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
+import com.example.mateuszskolimowski.inzynierka.model.DestinationRoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
@@ -26,7 +29,8 @@ import java.util.ArrayList;
 
 public class AddNewRoutePointActivity extends AppCompatActivity
         implements TimePickerFragment.FragmentResponseListener,
-        LatelyAddedRoutePointsDialog.LatelyAddedRoutePointsDialogInterface{
+        LatelyAddedRoutePointsDialog.LatelyAddedRoutePointsDialogInterface,
+        GetDistancesFromNewRoutePointApiFragment.FragmentResponseListener{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_OUTSTATE_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_OUTSTATE_TAG";
@@ -153,10 +157,38 @@ public class AddNewRoutePointActivity extends AppCompatActivity
                 selectedPlaceId,
                 new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
                 new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)));
+
+        getRoutePointDestinationsFromApi(routePoint);
+
         route.addRoutePoint(routePoint);
         Utils.getSQLiteHelper(AddNewRoutePointActivity.this).updateRoutePoints(route);
         Utils.getSQLiteHelper(AddNewRoutePointActivity.this).addNewLatelyAddedRoutePoint(routePoint);
         return route;
+    }
+
+    private void getRoutePointDestinationsFromApi(RoutePoint routePoint) {
+        getDistancesFromNewRoutePoint(routePoint);
+        getDistanceToNewRoutePoint();
+    }
+
+    //pobiera dane o trasie do nowo danego punktu z api
+    private void getDistanceToNewRoutePoint() {
+
+    }
+
+    //pobiranie danych o trasie z nowo dodanego punktu do pozostalych
+    private void getDistancesFromNewRoutePoint(RoutePoint routePoint) {
+        GetDistancesFromNewRoutePointApiFragment getDistancesFromNewRoutePointApiFragment = (GetDistancesFromNewRoutePointApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG);
+        if (getDistancesFromNewRoutePointApiFragment == null) {
+            if (Utils.isOnline(this)) {
+                getDistancesFromNewRoutePointApiFragment = GetDistancesFromNewRoutePointApiFragment.newInstance(routePoint,route.getRoutePoints());
+                getSupportFragmentManager().beginTransaction().add(getDistancesFromNewRoutePointApiFragment, GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+//                listener.showLoadingDialog(getString(R.string.loading_data));
+            } else {
+//                listener.showFailureDialog(getString(R.string.no_internet));
+                Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     private void initPlaceAutocompleteFragment() {
@@ -243,5 +275,15 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         selectedPlaceName = routePoint.getRoutePointName() + "";
         autocompleteFragment.setText(selectedPlaceName);
         checkIfAllInfoAvailable();
+    }
+
+    @Override
+    public void onDoneGetDestinationRoutePoints(ArrayList<DestinationRoutePoint> destinationRoutePoints) {
+
+    }
+
+    @Override
+    public void onFailureListener(String msg, int statusCode) {
+
     }
 }

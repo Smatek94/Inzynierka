@@ -15,17 +15,21 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
+import com.example.mateuszskolimowski.inzynierka.model.DestinationRoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
+
+import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
@@ -84,7 +88,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 break;
             }
             case R.id.action_optimize: {
-                //fixme dodac optmizowanie kolejnosci punktow
+                //fixme optimize route
                 break;
             }
             case R.id.action_navigate: {
@@ -95,6 +99,11 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
             }
         }
         return super.onOptionsItemSelected(item);
+    }
+
+
+    private void getDataFromGoogleApi() {
+
     }
 
     @Override

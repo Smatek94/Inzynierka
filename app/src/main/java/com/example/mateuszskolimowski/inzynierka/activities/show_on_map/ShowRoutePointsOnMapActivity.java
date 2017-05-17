@@ -1,5 +1,10 @@
 package com.example.mateuszskolimowski.inzynierka.activities.show_on_map;
 
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -12,6 +17,7 @@ import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
@@ -37,13 +43,13 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
     @Override
     protected void onSaveInstanceState(Bundle outState) {
         super.onSaveInstanceState(outState);
-        outState.putParcelable(CAMERA_POSITION_OUT_STATE_TAG,map.getCameraPosition());
+        outState.putParcelable(CAMERA_POSITION_OUT_STATE_TAG, map.getCameraPosition());
     }
 
     private Route getRoute() {
         int routeId = getIntent().getExtras().getInt(ROUTE_ID_EXTRA_TAG);
-        for(Route r : Utils.getSQLiteHelper(this).getRoutes()){
-            if(r.getId() == routeId){
+        for (Route r : Utils.getSQLiteHelper(this).getRoutes()) {
+            if (r.getId() == routeId) {
                 return r;
             }
         }
@@ -62,7 +68,7 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
                 map = googleMap;
                 markerList = new ArrayList<>();
                 initMapMarkers();
-                if(savedInstanceState != null){
+                if (savedInstanceState != null) {
                     moveCamera((CameraPosition) savedInstanceState.getParcelable(CAMERA_POSITION_OUT_STATE_TAG));
                 } else {
                     animateCamera();
@@ -77,14 +83,14 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
     }
 
     private void initMapMarkers() {
-        for(int i = 0 ; i < route.getRoutePoints().size() ; i++){
+        for (int i = 0; i < route.getRoutePoints().size(); i++) {
             markerList.add(createNewMarker(i));
         }
     }
 
     private void animateCamera() {
         LatLngBounds.Builder builder = new LatLngBounds.Builder();
-        for (int i = 0 ; i < markerList.size() ; i++) {
+        for (int i = 0; i < markerList.size(); i++) {
             builder.include(markerList.get(i).getMarker().getPosition());
         }
         LatLngBounds bounds = builder.build();
@@ -94,11 +100,32 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
     }
 
     private MyMarker createNewMarker(int i) {
-        return new MyMarker(map.addMarker(createNewMarkerOptions(i)),i);
+        return new MyMarker(map.addMarker(createNewMarkerOptions(i)), i);
     }
 
     private MarkerOptions createNewMarkerOptions(int i) {
-        return new MarkerOptions().position(route.getRoutePoints().get(i).getRoutePointLatLng());
-        //fixme dodac customowy marker
+//        return new MarkerOptions()
+//                .position(route.getRoutePoints().get(i).getRoutePointLatLng())
+//                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_add_route))
+//                .title("test");
+        return createCustomMarker(i+1).position(route.getRoutePoints().get(i).getRoutePointLatLng());
+    }
+
+    private MarkerOptions createCustomMarker(int markerNumber) {
+        Bitmap.Config conf = Bitmap.Config.ARGB_8888;
+        Bitmap bmp = Bitmap.createBitmap(200, 200, conf);
+        Canvas canvas1 = new Canvas(bmp);
+        Paint color = new Paint();
+        color.setTextSize(80);
+        color.setColor(Color.WHITE);
+        color.setFakeBoldText(true);
+        color.setTextAlign(Paint.Align.CENTER);
+        canvas1.drawBitmap(BitmapFactory.decodeResource(getResources(),
+                R.mipmap.map_marker), 0,0, color);
+        canvas1.drawText(""+markerNumber, 62, 80, color);
+
+        return new MarkerOptions()
+                .icon(BitmapDescriptorFactory.fromBitmap(bmp));
+
     }
 }

@@ -8,6 +8,7 @@ import com.google.android.gms.maps.model.LatLng;
 import com.google.gson.Gson;
 
 import java.sql.*;
+import java.util.ArrayList;
 
 /**
  * Created by Mateusz Skolimowski on 26.03.2017.
@@ -23,28 +24,7 @@ public class RoutePoint implements Parcelable{
     private Time routePointEndTime;
     private long date;
     private int visited;
-
-    protected RoutePoint(Parcel in) {
-        routePointLatLng = in.readParcelable(LatLng.class.getClassLoader());
-        routePointPlaceName = in.readString();
-        routePointPlaceId = in.readString();
-        routePointStartTime = in.readParcelable(Time.class.getClassLoader());
-        routePointEndTime = in.readParcelable(Time.class.getClassLoader());
-        date = in.readLong();
-        visited = in.readInt();
-    }
-
-    public static final Creator<RoutePoint> CREATOR = new Creator<RoutePoint>() {
-        @Override
-        public RoutePoint createFromParcel(Parcel in) {
-            return new RoutePoint(in);
-        }
-
-        @Override
-        public RoutePoint[] newArray(int size) {
-            return new RoutePoint[size];
-        }
-    };
+    private ArrayList<DestinationRoutePoint> destinationRoutePointArrayList;
 
     @Override
     public boolean equals(Object obj) {
@@ -134,5 +114,29 @@ public class RoutePoint implements Parcelable{
         parcel.writeParcelable(routePointEndTime, i);
         parcel.writeLong(date);
         parcel.writeInt(visited);
+        parcel.writeTypedList(destinationRoutePointArrayList);
     }
+
+    protected RoutePoint(Parcel in) {
+        routePointLatLng = in.readParcelable(LatLng.class.getClassLoader());
+        routePointPlaceName = in.readString();
+        routePointPlaceId = in.readString();
+        routePointStartTime = in.readParcelable(Time.class.getClassLoader());
+        routePointEndTime = in.readParcelable(Time.class.getClassLoader());
+        date = in.readLong();
+        visited = in.readInt();
+        destinationRoutePointArrayList = in.createTypedArrayList(DestinationRoutePoint.CREATOR);
+    }
+
+    public static final Creator<RoutePoint> CREATOR = new Creator<RoutePoint>() {
+        @Override
+        public RoutePoint createFromParcel(Parcel in) {
+            return new RoutePoint(in);
+        }
+
+        @Override
+        public RoutePoint[] newArray(int size) {
+            return new RoutePoint[size];
+        }
+    };
 }
