@@ -5,9 +5,11 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.support.v7.app.AppCompatActivity;
 
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.google.gson.Gson;
 
@@ -35,14 +37,10 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             "(" + KEY_ID + " " + ID_OPTIONS + ", " +
             ROUTE_AS_JSON_COLUMN_NAME + " TEXT NOT NULL);";
 
-
-    private static final String LATELY_ADDED_ROUTE_POINTS_TABLE_NAME = "LATELY_ADDED_ROUTE_POINTS_TABLE_NAME";
-    private static final String LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME = "LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME";
-//    private static String LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME = "LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME";
-    private static final String CREATE_LATELY_ADDED_ROUTE_POINTS_TABLE = "CREATE TABLE " + LATELY_ADDED_ROUTE_POINTS_TABLE_NAME +
-            "(" + KEY_ID + " " + ID_OPTIONS + ", " +
-//            LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME + " REAL, " +
-            LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME + " TEXT NOT NULL);";
+    private static final String ROUTE_POINTS_DESTINATION_TABLE_NAME = "ROUTE_POINTS_DESTINATION_TABLE_NAME";
+    private static final String ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME = "ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME";
+    private static final String CREATE_ROUTE_POINTS_DESTINATION_TABLE = "CREATE TABLE " + ROUTE_POINTS_DESTINATION_TABLE_NAME +
+            "(" + ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME + " TEXT NOT NULL);";
 
 
     private SQLiteDatabase sqliteDatabase;
@@ -55,7 +53,7 @@ public class SQLiteHelper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase sqLiteDatabase) {
         Utils.debugLog("create Database");
         sqLiteDatabase.execSQL(CREATE_ROUTES_TABLE);
-        sqLiteDatabase.execSQL(CREATE_LATELY_ADDED_ROUTE_POINTS_TABLE);
+        sqLiteDatabase.execSQL(CREATE_ROUTE_POINTS_DESTINATION_TABLE);
     }
 
     @Override
@@ -144,56 +142,6 @@ public class SQLiteHelper extends SQLiteOpenHelper {
         }
     }
 
-    public void addNewLatelyAddedRoutePoint(RoutePoint routePoint) {
-        if(connectDataBase()){
-            ArrayList<RoutePoint> latelyAddedRoutePoints = getLatelyAddedRoutePoints();
-            if(latelyAddedRoutePoints.size() >= LATELY_ADDED_ROUTE_POINTS_LIMIT){
-                deleteOldestRoutePoint(latelyAddedRoutePoints);
-            }
-            ContentValues contentValues = new ContentValues();
-            Gson gson = new Gson();
-            routePoint.setAddedDate(System.currentTimeMillis());
-            contentValues.put(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME,gson.toJson(routePoint));
-//            contentValues.put(LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME,System.currentTimeMillis());
-            sqliteDatabase.insert(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,null,contentValues);
-        }
-    }
-
-    private void deleteOldestRoutePoint(ArrayList<RoutePoint> latelyAddedRoutePoints) {
-        long minDate = 99999999999999l;
-        RoutePoint routePointToDelete = null;
-        for(RoutePoint routePoint : latelyAddedRoutePoints){
-            if(routePoint.getDate() < minDate){
-                minDate = routePoint.getDate();
-                routePointToDelete = routePoint;
-            }
-        }
-        if(routePointToDelete != null) {
-            Gson gson = new Gson();
-            sqliteDatabase.delete(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME + "=?" ,new String[]{gson.toJson(routePointToDelete)});
-        }
-    }
-
-    public ArrayList<RoutePoint> getLatelyAddedRoutePoints() {
-        ArrayList<RoutePoint> resultList = new ArrayList<>();
-        if(connectDataBase()){
-//            String[] columns = {LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME,LATELY_ADDED_ROUTE_POINTS_DATE_COLUMN_NAME};
-            String[] columns = {LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME};
-            Cursor cursor = sqliteDatabase.query(LATELY_ADDED_ROUTE_POINTS_TABLE_NAME,columns,null,null,null,null,null);
-            if(cursor != null && cursor.moveToFirst()) {
-                do {
-                    Gson gson = new Gson();
-                    RoutePoint routePoint = gson.fromJson(cursor.getString(cursor.getColumnIndex(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME)), RoutePoint.class);
-//                    routePoint.setAddedDate(cursor.getLong(cursor.getColumnIndex(LATELY_ADDED_ROUTE_POINTS_AS_JSON_COLUMN_NAME)));
-                    resultList.add(routePoint);
-                } while (cursor.moveToNext());
-            }
-            return resultList;
-        } else {
-            return new ArrayList<>();
-        }
-    }
-
     public void updateRoutePoints(Route route) {
         if(connectDataBase()){
             ArrayList<Route> routes = getRoutes();
@@ -235,5 +183,83 @@ public class SQLiteHelper extends SQLiteOpenHelper {
             }
         }
         return false;
+    }
+
+    public ArrayList<RoutePointDestination> getRoutePointsDestinationList() {
+        ArrayList<RoutePointDestination> resultList = new ArrayList<>();
+        if(connectDataBase()){
+            String[] columns = {ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME};
+            Cursor cursor = sqliteDatabase.query(ROUTE_POINTS_DESTINATION_TABLE_NAME,columns,null,null,null,null,null);
+            if(cursor != null && cursor.moveToFirst()) {
+                do {
+                    Gson gson = new Gson();
+                    String fromDataBase = cursor.getString(cursor.getColumnIndex(ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME));
+                    RoutePointDestination routePointDestination = gson.fromJson(fromDataBase, RoutePointDestination.class);
+                    resultList.add(routePointDestination);
+                } while (cursor.moveToNext());
+            }
+            return resultList;
+        } else {
+            return new ArrayList<>();
+        }
+    }
+
+    public void addRoutePointDestination(String selectedPlaceId) {
+        if(connectDataBase()){
+            ContentValues contentValues = new ContentValues();
+            Gson gson = new Gson();
+            contentValues.put(ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME,gson.toJson(new RoutePointDestination(selectedPlaceId)));
+            sqliteDatabase.insert(ROUTE_POINTS_DESTINATION_TABLE_NAME,null,contentValues);
+        }
+    }
+
+    public RoutePointDestination getRoutePointDestinationFromDataBase(String selectedPlaceId) {
+        ArrayList<RoutePointDestination> routePointDestinationArrayList = getRoutePointsDestinationList();
+        for(RoutePointDestination rp : routePointDestinationArrayList){
+            if(rp.getRoutePointPlaceId().equals(selectedPlaceId)){
+                return rp;
+            }
+        }
+        return null;
+    }
+
+    public void updateRoutePointsDestination(RoutePointDestination routePointDestinations) {
+        if(connectDataBase()){
+            RoutePointDestination routePointDestinationThatWasUpdated = findRoutePointDestinationToUpdate(routePointDestinations);
+            ContentValues contentValues = new ContentValues();
+            Gson gson = new Gson();
+            contentValues.put(ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME,gson.toJson(routePointDestinations));
+            sqliteDatabase.update(ROUTE_POINTS_DESTINATION_TABLE_NAME,
+                    contentValues,
+                    ROUTE_POINTS_DESTINATION_AS_JSON_COLUMN_NAME + "=?",
+                    new String[]{gson.toJson(routePointDestinationThatWasUpdated)});
+        }
+    }
+
+    private RoutePointDestination findRoutePointDestinationToUpdate(RoutePointDestination routePointDestinations) {
+        ArrayList<RoutePointDestination> routePointsDestinationList = getRoutePointsDestinationList();
+        for(RoutePointDestination rpd : routePointsDestinationList){
+            if(rpd.getRoutePointPlaceId().equals(routePointDestinations.getRoutePointPlaceId())){
+                return rpd;
+            }
+        }
+        return null;
+    }
+
+    public void updateRoutePointsDestination(ArrayList<RoutePointDestination> routePointDestinationsList) {
+        for(RoutePointDestination rpd : routePointDestinationsList){
+            updateRoutePointsDestination(rpd);
+        }
+    }
+
+    public RoutePoint getRoutePoint(String destinationPlaceId) {
+        for(Route route : getRoutes()){
+            for(RoutePoint routePoint : route.getRoutePoints()){
+                if (routePoint.getId().equals(destinationPlaceId)){
+                    return routePoint;
+                }
+            }
+        }
+        return null;
     }
 }

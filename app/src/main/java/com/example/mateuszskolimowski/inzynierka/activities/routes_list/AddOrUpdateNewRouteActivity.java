@@ -1,7 +1,6 @@
 package com.example.mateuszskolimowski.inzynierka.activities.routes_list;
 
 import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.DialogFragment;
 import android.support.v7.app.AppCompatActivity;
@@ -102,11 +101,11 @@ public class AddOrUpdateNewRouteActivity extends AppCompatActivity implements Ti
             public void onClick(View view) {
                 Intent resultIntent = new Intent();
                 Bundle bundle = new Bundle();
-                ArrayList<RoutePoint> routePointArrayList = new ArrayList<RoutePoint>();
+                ArrayList<RoutePoint> routePointIdArrayList = new ArrayList<RoutePoint>();
                 Route route = new Route(routeNameEditText.getText().toString(),
                         new Time(getHourFromTimeTextView(startTimeTextView),getMinuteFromTimeTextView(startTimeTextView)),
                         new Time(getHourFromTimeTextView(endTimeTextView),getMinuteFromTimeTextView(endTimeTextView)),
-                        routePointArrayList,
+                        routePointIdArrayList,
                         Route.createRouteId(AddOrUpdateNewRouteActivity.this));
                 if(getIntent().getExtras() != null && getIntent().getExtras().getInt(UPDATED_ROUTE_ID_EXTRA_TAG) != 0) {
                     route.setId(getIntent().getExtras().getInt(UPDATED_ROUTE_ID_EXTRA_TAG));

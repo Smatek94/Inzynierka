@@ -15,13 +15,13 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.GrayDividerView;
 import com.example.mateuszskolimowski.inzynierka.views.RoutePointItemView;
 import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.AddRoutePointsActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
-import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.utils.Animations;
 
 import java.util.ArrayList;
@@ -73,7 +73,7 @@ public class RoutesRecyclerViewAdapter
     private void initRoutePointsLayout(int position, ViewHolder holder) {
         LinearLayout routePointsLinearLayout = (LinearLayout) holder.routePointsLayout.findViewById(R.id.route_points_linear_layout);
         routePointsLinearLayout.removeAllViews();
-        for(int i = 0 ; i < routesList.get(position).getRoutePoints().size() ; i++){
+        for(int i = 0; i < routesList.get(position).getRoutePoints().size() ; i++){
             addRoutePointToLayout(routesList.get(position).getRoutePoints().get(i),routePointsLinearLayout);
             if(i < routesList.get(position).getRoutePoints().size() - 1 ){
                 routePointsLinearLayout.addView(new GrayDividerView(context,R.layout.gray_divider));
@@ -81,8 +81,8 @@ public class RoutesRecyclerViewAdapter
         }
     }
 
-    private void addRoutePointToLayout(RoutePoint rp, LinearLayout routePointsLinearLayout) {
-        routePointsLinearLayout.addView(new RoutePointItemView(context,rp));
+    private void addRoutePointToLayout(RoutePoint routePoint, LinearLayout routePointsLinearLayout) {
+        routePointsLinearLayout.addView(new RoutePointItemView(context, routePoint));
     }
 
     @Override
@@ -114,9 +114,7 @@ public class RoutesRecyclerViewAdapter
     }
 
     private class RouteHoldingClass{
-
         protected int position;
-
         RouteHoldingClass(int position){
             this.position = position;
         }
@@ -189,7 +187,7 @@ public class RoutesRecyclerViewAdapter
     private class ExpandImageViewClickListener extends RouteHoldingClass implements View.OnClickListener {
 
         private final Context context;
-        private ArrayList<RoutePoint> routePoints;
+//        private ArrayList<RoutePointDestination> routePoints;
         private View layout;
         private ImageView expandArrowImageView;
 
@@ -202,8 +200,9 @@ public class RoutesRecyclerViewAdapter
 
         @Override
         public void onClick(View view) {
-            this.routePoints = routesList.get(position).getRoutePoints();
-            if(routePoints.size() != 0) {
+//            this.routePoints = routesList.get(position).getRoutePoints();
+//            if(routePoints.size() != 0) {
+            if(routesList.get(position).getRoutePoints().size() != 0) {
                 handleAnimation();
             } else {
                 Utils.showMsgDialog(appCompatActivity,appCompatActivity.getString(R.string.no_points_in_route));

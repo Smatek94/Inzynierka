@@ -13,6 +13,7 @@ import android.widget.TextView;
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 
 
@@ -35,7 +36,7 @@ public class EditRoutePointTimeDialog extends DialogFragment {
     public static EditRoutePointTimeDialog newInstance(RoutePoint routePoint) {
         EditRoutePointTimeDialog fragment = new EditRoutePointTimeDialog();
         Bundle bundle = new Bundle();
-        bundle.putParcelable(ROUTE_POINT_ARG_TAG,routePoint);
+        bundle.putParcelable(ROUTE_POINT_ARG_TAG, routePoint);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -67,8 +68,8 @@ public class EditRoutePointTimeDialog extends DialogFragment {
                 getString(R.string.start_time),
                 endTimeLayout,getString(R.string.end_time),
                 (AppCompatActivity) getActivity());
-        startTimeTextView.setText(routePoint.getRoutePointStartTime().toString());
-        endTimeTextView.setText(routePoint.getRoutePointEndTime().toString());
+        startTimeTextView.setText(routePoint.getStartTime().toString());
+        endTimeTextView.setText(routePoint.getEndTime().toString());
         initOkTextViewClick();
     }
 

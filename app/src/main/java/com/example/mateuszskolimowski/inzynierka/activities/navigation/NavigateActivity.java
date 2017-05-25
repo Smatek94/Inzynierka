@@ -1,9 +1,9 @@
 package com.example.mateuszskolimowski.inzynierka.activities.navigation;
 
 import android.content.Intent;
+import android.os.Bundle;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.Menu;
@@ -14,6 +14,7 @@ import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AddToCalendarDialog;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
@@ -104,7 +105,7 @@ public class NavigateActivity extends AppCompatActivity {
         Route route = getRouteFromIdExtra();
         ArrayList<RoutePoint> routePoints = route.getRoutePoints();
         for (int i = 0; i < routePoints.size(); i++) {
-            if (routePoints.get(i).equals(routePoint))
+            if (routePoints.get(i).getId().equals(routePoint.getId()))
                 routePoints.get(i).setVisited(isChecked);
         }
         route.setRoutePoints(routePoints);
@@ -142,6 +143,6 @@ public class NavigateActivity extends AppCompatActivity {
 
     public interface NavigationCallback {
         public void navigationLaunched(RoutePoint routePoint);
-        public void routePointCheckedOrUncheked(RoutePoint routePoint,boolean isChecked);
+        public void routePointCheckedOrUncheked(RoutePoint routePoint, boolean isChecked);
     }
 }

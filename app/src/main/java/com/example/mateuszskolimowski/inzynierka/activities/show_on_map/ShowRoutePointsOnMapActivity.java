@@ -5,7 +5,6 @@ import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
-import android.os.Parcelable;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
@@ -105,10 +104,10 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
 
     private MarkerOptions createNewMarkerOptions(int i) {
 //        return new MarkerOptions()
-//                .position(route.getRoutePoints().get(i).getRoutePointLatLng())
+//                .position(route.getRoutePoints().get(i).getLatLng())
 //                .icon(BitmapDescriptorFactory.fromResource(R.mipmap.ic_add_route))
 //                .title("test");
-        return createCustomMarker(i+1).position(route.getRoutePoints().get(i).getRoutePointLatLng());
+        return createCustomMarker(i+1).position(route.getRoutePoints().get(i).getLatLng());
     }
 
     private MarkerOptions createCustomMarker(int markerNumber) {

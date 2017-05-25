@@ -1,9 +1,7 @@
 package com.example.mateuszskolimowski.inzynierka.dialog_fragments;
 
-import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.os.Parcelable;
 import android.provider.CalendarContract;
 import android.support.annotation.Nullable;
 import android.support.v4.app.DialogFragment;
@@ -15,12 +13,11 @@ import android.widget.EditText;
 import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
-import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 
 import java.sql.Date;
-import java.text.DateFormat;
 import java.util.Calendar;
 
 
@@ -38,10 +35,10 @@ public class AddToCalendarDialog extends DialogFragment {
     private TextView okTextView;
     private TextView noTextView;
 
-    public static AddToCalendarDialog newInstance(RoutePoint actualRoutePointNavigated) {
+    public static AddToCalendarDialog newInstance(RoutePoint actualRoutePointDestinationNavigated) {
         AddToCalendarDialog fragment = new AddToCalendarDialog();
         Bundle bundle = new Bundle();
-        bundle.putParcelable(ACTUAL_ROUTE_POINT_EXTRA_TAG,actualRoutePointNavigated);
+        bundle.putParcelable(ACTUAL_ROUTE_POINT_EXTRA_TAG, actualRoutePointDestinationNavigated);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -58,8 +55,8 @@ public class AddToCalendarDialog extends DialogFragment {
     }
 
     private void setUpGUI(RoutePoint routePoint) {
-        titleEditText.setText(routePoint.getRoutePointName());
-        descriptionEditText.setText("Miejsce " + routePoint.getRoutePointName() + " odwiedzone o " + getActualTime() + " przy pomocy aplikacji Inzynierka"); //fixme zmienic inzynierka
+        titleEditText.setText(routePoint.getPlaceName());
+        descriptionEditText.setText("Miejsce " + routePoint.getPlaceName() + " odwiedzone o " + getActualTime() + " przy pomocy aplikacji Inzynierka"); //fixme zmienic inzynierka
         okTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

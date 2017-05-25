@@ -18,7 +18,6 @@ import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 
 import java.util.ArrayList;
-import java.util.Random;
 
 public class RoutesListActivity extends AppCompatActivity
     implements AreYouSureDialog.DeleteRouteInterface {
@@ -41,106 +40,6 @@ public class RoutesListActivity extends AppCompatActivity
         setUpGUI();
     }
 
-/*    private void seba() {
-        try {
-        SeqQueue q = new SeqQueue();
-        SQFeeder f = new SQFeeder(0, 20, 1000, q);
-        SQEater e = new SQEater(q);
-        Utils.debugLog("Starting feeder");
-        f.start();  // start feeder
-        Thread.sleep(5000);  // wait 5 s.
-        Utils.debugLog("Starting eater");
-        e.start(); // start eater - it should print 4-0 immediately,
-        // then 5-19 with remarkable pauses
-        f.join();  // wait for feeder to finish
-        Thread.sleep(2000);
-        e.interrupt(); // finish eater
-        e.join();      // let him stop
-        } catch (InterruptedException e1) {
-            e1.printStackTrace();
-        }
-    }
-
-    public class SQFeeder extends Thread {
-        int start;
-        int delay;
-        int nRepet;
-        SeqQueue sq;
-
-        SQFeeder(int s, int n, int dt, SeqQueue q) {
-            start = s;
-            delay = dt;
-            nRepet = n;
-            sq = q;
-        }
-
-        @Override
-        public void run() {
-            try {
-                for (int i = start; i < start + nRepet; i++) {
-                    sq.insert(new Integer(i));
-                    sleep(delay);
-                }
-            } catch (InterruptedException e) {
-                Utils.debugLog("SQFeeder interrupted");
-                return;
-            }
-            Utils.debugLog("SQFeeder has ended");
-        }
-    }
-
-    public class SeqQueue {
-        private final ArrayList<Object> q;
-        public SeqQueue() {
-            q = new ArrayList<>();
-        }
-        public synchronized void insert(Object o) {
-            q.add(o);
-            notify();    // powiadom watek pobierajacy
-        }
-        public synchronized Object get() throws InterruptedException  {
-            while (q.isEmpty()) // gdy kolejka jest pusta
-            {
-                wait();           // czekaj az pojawi się w niej coś
-            }
-            return q.remove(q.size() - 1);
-        }
-    }
-
-    public class SQEater extends Thread {
-        SeqQueue sq;
-        SQEater(SeqQueue q) {
-            sq = q;
-        }
-        @Override
-        public void run() {
-            try {
-                while (true) {
-                    int queueValue = (int) sq.get();
-                    System.out.println("wynik metody monte carlo dla wartosci : " + queueValue + " = " + monteCarlo(queueValue));
-                }
-            } catch (InterruptedException e) {
-                System.out.println("SQEater interrupted");
-            }
-        }
-    }
-
-    private double monteCarlo(int queueValue) {
-        int pointsInCircle = 0;
-        for (int i = 0; i < queueValue; i++) {
-            double x = Math.random();
-            double y = Math.random();
-            // Sprawdzanie, czy punkt jest w kole
-            // r = 1, więc r * r = 1
-            if ((x * x + y * y) <= 1) {
-                pointsInCircle++;
-            }
-        }
-        // obliczanie stosunku liczby punktów w kole do wszystkich punktów
-        double s = (double) pointsInCircle / queueValue;
-        return 4 * s;
-    }*/
-
     private void getLayoutComponents() {
         noRoutesTextView = (TextView) findViewById(R.id.no_routes_textview);
         addRouteButton = (Button) findViewById(R.id.add_route_button);
@@ -149,7 +48,7 @@ public class RoutesListActivity extends AppCompatActivity
 
     private void setUpGUI() {
         getRoutesFromSQLite();
-        initAddRouteFloatingButton();
+        initAddRouteButton();
         initRoutesRecyclerView();
     }
 
@@ -160,7 +59,7 @@ public class RoutesListActivity extends AppCompatActivity
         routesRecyclerView.addItemDecoration(new DividerItemDecoration(RoutesListActivity.this, R.drawable.divider));
     }
 
-    private void initAddRouteFloatingButton() {
+    private void initAddRouteButton() {
         addRouteButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

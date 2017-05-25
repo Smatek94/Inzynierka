@@ -14,11 +14,8 @@ import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
-import com.example.mateuszskolimowski.inzynierka.utils.Utils;
-import com.example.mateuszskolimowski.inzynierka.views.ItemTouchHelperAdapterInterface;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 
-import java.util.ArrayList;
 import java.util.Collections;
 
 /**
@@ -50,8 +47,8 @@ public class RoutePointsRecyclerViewAdapter
     @Override
     public void onBindViewHolder(ViewHolder holder, int position) {
         RoutePoint routePoint = route.getRoutePoints().get(position);
-        holder.routePointsNameTextView.setText(route.getRoutePoints().get(position).getRoutePointName());
-        holder.timeTextView.setText(route.getRoutePoints().get(position).getRoutePointStartTime().toString() + " - " + route.getRoutePoints().get(position).getRoutePointEndTime().toString());
+        holder.routePointsNameTextView.setText(routePoint.getPlaceName());
+        holder.timeTextView.setText(routePoint.getStartTime().toString() + " - " + routePoint.getEndTime().toString());
         holder.editRoutePointImageView.setOnClickListener(new EditRoutePointClickListener(routePoint));
         holder.deleteRoutePointImageView.setOnClickListener(new DeleteRoutePointClickListener(routePoint));
         holder.moveDownRoutePointImageView.setOnClickListener(new MoveDownRoutePointClickListener(routePoint));

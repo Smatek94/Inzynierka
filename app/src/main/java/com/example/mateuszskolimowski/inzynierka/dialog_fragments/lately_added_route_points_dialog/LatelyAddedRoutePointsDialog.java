@@ -11,8 +11,7 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.mateuszskolimowski.inzynierka.R;
-import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
-import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 
 import java.util.ArrayList;
@@ -26,13 +25,13 @@ public class LatelyAddedRoutePointsDialog extends DialogFragment {
     public static final String TAG = LatelyAddedRoutePointsDialog.class.getCanonicalName() + "TAG";
     private static final String LATELY_ADED_ROUTE_POINTS_EXTRA_TAG = LatelyAddedRoutePointsDialog.class.getName() + "LATELY_ADED_ROUTE_POINTS_EXTRA_TAG";
     private LatelyAddedRoutePointsRecyclerViewAdapter latelyAddedRoutePointsRecyclerViewAdapter;
-    private ArrayList<RoutePoint> latelyAddedRoutePoints;
+    private ArrayList<RoutePointDestination> latelyAddedRoutePointDestinations;
     private LatelyAddedRoutePointsDialogInterface latelyAddedRoutePointsDialogInterface;
 
-    public static LatelyAddedRoutePointsDialog newInstance(ArrayList<RoutePoint> latelyAddedRoutePoints) {
+    public static LatelyAddedRoutePointsDialog newInstance(ArrayList<RoutePointDestination> latelyAddedRoutePointDestinations) {
         LatelyAddedRoutePointsDialog fragment = new LatelyAddedRoutePointsDialog();
         Bundle bundle = new Bundle();
-        bundle.putParcelableArrayList(LATELY_ADED_ROUTE_POINTS_EXTRA_TAG,latelyAddedRoutePoints);
+        bundle.putParcelableArrayList(LATELY_ADED_ROUTE_POINTS_EXTRA_TAG, latelyAddedRoutePointDestinations);
         fragment.setArguments(bundle);
         return fragment;
     }
@@ -65,6 +64,6 @@ public class LatelyAddedRoutePointsDialog extends DialogFragment {
     }
 
     public interface LatelyAddedRoutePointsDialogInterface{
-        void latelyAddedRoutePointDialogCallback(RoutePoint routePoint);
+        void latelyAddedRoutePointDialogCallback(RoutePointDestination routePointDestination);
     }
 }

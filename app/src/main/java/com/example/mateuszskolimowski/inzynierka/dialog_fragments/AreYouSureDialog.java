@@ -11,6 +11,7 @@ import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 
 
@@ -32,7 +33,7 @@ public class AreYouSureDialog extends DialogFragment {
         Bundle bundle = new Bundle();
         bundle.putString(DIALOG_MSG_ARG_TAG,msg);
         bundle.putParcelable(ROUTE_ARG_TAG,route);
-        bundle.putParcelable(ROUTE_POINT_ARG_TAG,routePoint);
+        bundle.putParcelable(ROUTE_POINT_ARG_TAG, routePoint);
         fragment.setArguments(bundle);
         return fragment;
     }

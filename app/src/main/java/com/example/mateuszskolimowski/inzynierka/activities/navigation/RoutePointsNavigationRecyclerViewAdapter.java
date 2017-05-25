@@ -2,8 +2,6 @@ package com.example.mateuszskolimowski.inzynierka.activities.navigation;
 
 import android.content.Intent;
 import android.net.Uri;
-import android.os.Parcelable;
-import android.provider.CalendarContract;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
@@ -17,6 +15,7 @@ import android.widget.TextView;
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 
 import java.util.ArrayList;
@@ -59,8 +58,8 @@ public class RoutePointsNavigationRecyclerViewAdapter
     @Override
     public void onBindViewHolder(final ViewHolder holder, int position) {
         final RoutePoint routePoint = routePointArrayList.get(position);
-        holder.routePointsNameTextView.setText(routePoint.getRoutePointName());
-        holder.timeTextView.setText(routePoint.getRoutePointStartTime().toString() + " - " + routePoint.getRoutePointEndTime().toString());
+        holder.routePointsNameTextView.setText(routePoint.getPlaceName());
+        holder.timeTextView.setText(routePoint.getStartTime().toString() + " - " + routePoint.getEndTime().toString());
         holder.navigateToRoutePointImageView.setOnClickListener(new OnNavigateToRoutePointClickListerner(routePoint,holder));
         checkCheckBox(routePoint.getVisited(),holder.routePointVisitedCheckBox);
         holder.routePointVisitedCheckBox.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
@@ -111,7 +110,7 @@ public class RoutePointsNavigationRecyclerViewAdapter
 
         @Override
         public void onClick(View view) {
-            Uri gmmIntentUri = Uri.parse("google.navigation:q="+routePoint.getRoutePointLatLng().latitude+","+routePoint.getRoutePointLatLng().longitude);
+            Uri gmmIntentUri = Uri.parse("google.navigation:q="+routePoint.getLatLng().latitude+","+routePoint.getLatLng().longitude);
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
             appCompatActivity.startActivityForResult(mapIntent, NavigateActivity.GOOGLE_NAVIGATION_INTENT_REQUEST_CODE);

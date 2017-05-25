@@ -20,26 +20,26 @@ import org.json.JSONObject;
 import java.util.ArrayList;
 
 
-public class GetDistancesFromNewRoutePointApiFragment extends RequestFragment {
+public class GetDistancesToNewRoutePointApiFragment extends RequestFragment {
 
-    public static final String FRAGMENT_TAG = "request " + GetDistancesFromNewRoutePointApiFragment.class.getName() + " tag";
-    private static final String FROM_ROUTE_POINT_EXTRA_TAG = GetDistancesFromNewRoutePointApiFragment.class.getName() + "FROM_ROUTE_POINT_EXTRA_TAG";
-    private static final String TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG = GetDistancesFromNewRoutePointApiFragment.class.getName() + "TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG";
-    private static final String ACTION_TYPE_EXTRA_TAG = GetDistancesFromNewRoutePointApiFragment.class.getName() + "ACTION_TYPE_EXTRA_TAG";
+    public static final String FRAGMENT_TAG = "request " + GetDistancesToNewRoutePointApiFragment.class.getName() + " tag";
+    private static final String TO_ROUTE_POINT_EXTRA_TAG = GetDistancesToNewRoutePointApiFragment.class.getName() + "FROM_ROUTE_POINT_EXTRA_TAG";
+    private static final String FROM_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG = GetDistancesToNewRoutePointApiFragment.class.getName() + "TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG";
+    private static final String ACTION_TYPE_EXTRA_TAG = GetDistancesToNewRoutePointApiFragment.class.getName() + "ACTION_TYPE_EXTRA_TAG";
     private String URL = ApiURLs.DISTANCE_MATRIX_URL;
-    private RoutePointDestination routePointDestinations;
+    private ArrayList<RoutePointDestination> routePointDestinationsList;
     private FragmentResponseListener fragmentResponseListener;
 
-    public static GetDistancesFromNewRoutePointApiFragment newInstance(String fromRoutePointId, ArrayList<RoutePointDestination> toRoutePointDestinationArrayList,int actionType) {
-        GetDistancesFromNewRoutePointApiFragment fragment = new GetDistancesFromNewRoutePointApiFragment();
-        fragment.setArguments(createArgsBundle(fromRoutePointId, toRoutePointDestinationArrayList,actionType));
+    public static GetDistancesToNewRoutePointApiFragment newInstance(String fromRoutePointId, ArrayList<RoutePointDestination> toRoutePointDestinationArrayList, int actionType) {
+        GetDistancesToNewRoutePointApiFragment fragment = new GetDistancesToNewRoutePointApiFragment();
+        fragment.setArguments(createArgsBundle(fromRoutePointId, toRoutePointDestinationArrayList, actionType));
         return fragment;
     }
 
-    private static Bundle createArgsBundle(String fromRoutePointId, ArrayList<RoutePointDestination> toRoutePointDestinationArrayList,int actionType) {
+    private static Bundle createArgsBundle(String fromRoutePointId, ArrayList<RoutePointDestination> toRoutePointDestinationArrayList, int actionType) {
         Bundle args = new Bundle();
-        args.putString(FROM_ROUTE_POINT_EXTRA_TAG, fromRoutePointId);
-        args.putParcelableArrayList(TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG, toRoutePointDestinationArrayList);
+        args.putString(TO_ROUTE_POINT_EXTRA_TAG, fromRoutePointId);
+        args.putParcelableArrayList(FROM_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG, toRoutePointDestinationArrayList);
         args.putInt(ACTION_TYPE_EXTRA_TAG, actionType);
         return args;
     }
@@ -47,62 +47,60 @@ public class GetDistancesFromNewRoutePointApiFragment extends RequestFragment {
     @Override
     public void request() {
         asyncHttpClient = new AsyncHttpClient();
-        asyncHttpClient.get(URL,createRequestParams(), jsonHttpResponseHandlerHelper);
+        asyncHttpClient.get(URL, createRequestParams(), jsonHttpResponseHandlerHelper);
     }
 
     private RequestParams createRequestParams() {
         RequestParams requestParams = new RequestParams();
-        routePointDestinations = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(FROM_ROUTE_POINT_EXTRA_TAG));
-        requestParams.put("origins", "place_id:" + routePointDestinations.getRoutePointPlaceId());
-        ArrayList<RoutePointDestination> toRoutePointsArrayListDestination = getArguments().getParcelableArrayList(TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG);
-        String destinationString = "";
-        for(int i = 0; i < toRoutePointsArrayListDestination.size() ; i++){
-            RoutePointDestination toRoutePointDestination = toRoutePointsArrayListDestination.get(i);
-            destinationString += "place_id:" + toRoutePointDestination.getRoutePointPlaceId();
-            if(i < toRoutePointsArrayListDestination.size() - 1){
-                destinationString += "|";
+        routePointDestinationsList = getArguments().getParcelableArrayList(FROM_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG);
+        String originsString = "";
+        for (int i = 0; i < routePointDestinationsList.size(); i++) {
+            RoutePointDestination toRoutePointDestination = routePointDestinationsList.get(i);
+            originsString += "place_id:" + toRoutePointDestination.getRoutePointPlaceId();
+            if (i < routePointDestinationsList.size() - 1) {
+                originsString += "|";
             }
         }
-        requestParams.put("destinations",destinationString);
-        requestParams.put("key",getString(R.string.google_maps_key));
+        requestParams.put("origins", originsString);
+        RoutePointDestination routePointDestinations = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(TO_ROUTE_POINT_EXTRA_TAG));
+        requestParams.put("destinations", "place_id:" + routePointDestinations.getRoutePointPlaceId());
+
+        requestParams.put("key", getString(R.string.google_maps_key));
         return requestParams;
     }
 
     @Override
     protected void parseData(JSONObject resposne) throws JSONException {
-        Utils.debugLog(""+resposne);
+        Utils.debugLog("" + resposne);
         JSONArray rows = resposne.getJSONArray("rows");
-        JSONObject row = rows.getJSONObject(0);
-        JSONArray elements = row.getJSONArray("elements");
-        for(int i = 0 ; i < elements.length() ; i++){
-            JSONObject travelData = elements.getJSONObject(i);
-            if(travelData.getString("status").equals("OK")){
+        for (int i = 0; i < rows.length(); i++) {
+            JSONObject row = rows.getJSONObject(i);
+            JSONArray elements = row.getJSONArray("elements");
+            JSONObject travelData = elements.getJSONObject(0);
+            if (travelData.getString("status").equals("OK")) {
                 JSONObject distance = travelData.getJSONObject("distance");
                 JSONObject duration = travelData.getJSONObject("duration");
-                RoutePointDestination routePointDestination = (RoutePointDestination) getArguments().getParcelableArrayList(TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG).get(i);
-                routePointDestinations.addTravel(new Travel(
-                        duration.getLong("value"),
-                        distance.getLong("value"),
-                        routePointDestination.getRoutePointPlaceId()
-                ));
+                RoutePointDestination routePointDestination = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(TO_ROUTE_POINT_EXTRA_TAG));
+                routePointDestinationsList.get(i).addTravel(new Travel(duration.getLong("value"), distance.getLong("value"), routePointDestination.getRoutePointPlaceId()));
             }
         }
     }
 
     @Override
     public void onDoneRequest() {
-        if(fragmentResponseListener != null)
-            fragmentResponseListener.onDoneGetDestinationRoutePoints(routePointDestinations,getArguments().getInt(ACTION_TYPE_EXTRA_TAG));
+        if (fragmentResponseListener != null)
+            fragmentResponseListener.onDoneGetDestinationRoutePoints(routePointDestinationsList, getArguments().getInt(ACTION_TYPE_EXTRA_TAG));
     }
 
     @Override
     public void onFailRequest(String msg, int statusCode) {
-        if(fragmentResponseListener != null)
-            fragmentResponseListener.onFailureListener(msg,statusCode);
+        if (fragmentResponseListener != null)
+            fragmentResponseListener.onFailureListener(msg, statusCode);
     }
 
     public interface FragmentResponseListener {
-        void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestinations,int actionType);
+        void onDoneGetDestinationRoutePoints(ArrayList<RoutePointDestination> routePointDestinationsList, int actionType);
+
         void onFailureListener(String msg, int statusCode);
     }
 

@@ -15,26 +15,27 @@ import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
-import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
-import com.example.mateuszskolimowski.inzynierka.model.DestinationRoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
+import com.example.mateuszskolimowski.inzynierka.model.Travel;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
+import com.example.mateuszskolimowski.inzynierka.vns.VNS;
 
 import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
         TimePickerFragment.FragmentResponseListener,
-        EditRoutePointTimeDialog.EditRoutePointTimeInterace{
+        EditRoutePointTimeDialog.EditRoutePointTimeInterace {
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
@@ -71,29 +72,29 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     }
 
     private void handleIconsVisibility(Menu menu) {
-        if(route.getRoutePoints().size() == 0){
-            menu.setGroupVisible(R.id.menu_group,false);
+        if (route.getRoutePoints().size() == 0) {
+            menu.setGroupVisible(R.id.menu_group, false);
         } else {
-            menu.setGroupVisible(R.id.menu_group,true);
+            menu.setGroupVisible(R.id.menu_group, true);
         }
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
-        switch (item.getItemId()){
+        switch (item.getItemId()) {
             case R.id.action_show_on_map: {
                 Intent intent = new Intent(AddRoutePointsActivity.this, ShowRoutePointsOnMapActivity.class);
-                intent.putExtra(ShowRoutePointsOnMapActivity.ROUTE_ID_EXTRA_TAG,route.getId());
+                intent.putExtra(ShowRoutePointsOnMapActivity.ROUTE_ID_EXTRA_TAG, route.getId());
                 startActivity(intent);
                 break;
             }
             case R.id.action_optimize: {
-                //fixme optimize route
+                optimizeRoute();
                 break;
             }
             case R.id.action_navigate: {
                 Intent intent = new Intent(AddRoutePointsActivity.this, NavigateActivity.class);
-                intent.putExtra(NavigateActivity.ROUTE_ID_EXTRA_TAG,route.getId());
+                intent.putExtra(NavigateActivity.ROUTE_ID_EXTRA_TAG, route.getId());
                 startActivity(intent);
                 break;
             }
@@ -101,9 +102,9 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
-
-    private void getDataFromGoogleApi() {
-
+    private void optimizeRoute() {
+        Route x = VNS.optimal(route,this);
+//        Route x2 = VNS.VNS(route,this);
     }
 
     @Override
@@ -165,7 +166,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 case AddNewRoutePointActivity.ADD_NEW_ROUTE_POINT_ACTIVITY_TAG: {
                     route = (Route) data.getExtras().getParcelable(ROUTE_RESULT_TAG);
                     initRoutePointsRecyclerView();
-                    updateRoute(AddRoutePointsActivity.this,route);
+                    updateRoute(AddRoutePointsActivity.this, route);
                     routePointsRecyclerViewAdapter.notifyDataSetChanged();
                     break;
                 }
@@ -173,7 +174,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         }
     }
 
-    public static void updateRoute(AppCompatActivity appCompatActivity, Route route){
+    public static void updateRoute(AppCompatActivity appCompatActivity, Route route) {
         Utils.getSQLiteHelper(appCompatActivity).updateRoute(route);
     }
 
@@ -191,16 +192,16 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     @Override
     public void deleteRoutePoint(RoutePoint routePoint) {
-        route.deleteRoutePoint(routePoint);
+        route.deleteRoutePointId(routePoint);
         routePointsRecyclerViewAdapter.notifyDataSetChanged();
         handleRoutesVisibilityLayouts();
-        updateRoute(AddRoutePointsActivity.this,route);
+        updateRoute(AddRoutePointsActivity.this, route);
     }
 
     @Override
     public void onDoneGetTime(int timerKind, int hour, int minute) {
         EditRoutePointTimeDialog editRoutePointTimeDialog = (EditRoutePointTimeDialog) getSupportFragmentManager().findFragmentByTag(EditRoutePointTimeDialog.TAG);
-        if(editRoutePointTimeDialog != null) {
+        if (editRoutePointTimeDialog != null) {
             if (timerKind == TimePickerFragment.START_TIMER_KIND) {
                 AddOrUpdateNewRouteActivity.editStartTimeTextView(
                         hour,
@@ -224,9 +225,9 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     public void editRoutePointTime(RoutePoint routePoint, Time startTime, Time endTime) {
         int index = route.getRoutePoints().indexOf(routePoint);
-        route.getRoutePoints().get(index).setRoutePointStartTime(startTime);
-        route.getRoutePoints().get(index).setRoutePointEndTime(endTime);
+        route.getRoutePoints().get(index).setStartTime(startTime);
+        route.getRoutePoints().get(index).setEndTime(endTime);
         routePointsRecyclerViewAdapter.notifyDataSetChanged();
-        updateRoute(AddRoutePointsActivity.this,route);
+        updateRoute(AddRoutePointsActivity.this, route);
     }
 }

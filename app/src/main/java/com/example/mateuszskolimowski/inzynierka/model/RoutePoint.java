@@ -3,90 +3,71 @@ package com.example.mateuszskolimowski.inzynierka.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
-import com.google.android.gms.location.places.Place;
 import com.google.android.gms.maps.model.LatLng;
-import com.google.gson.Gson;
-
-import java.sql.*;
-import java.util.ArrayList;
 
 /**
- * Created by Mateusz Skolimowski on 26.03.2017.
+ * Created by Mateusz Skolimowski on 17.05.2017.
  */
 public class RoutePoint implements Parcelable{
 
     public static final int VISITED = 1;
-    private static final int NOT_VISITED = 0;
-    private LatLng routePointLatLng;
-    private String routePointPlaceName;
-    private String routePointPlaceId;
-    private Time routePointStartTime;
-    private Time routePointEndTime;
+    public static final int NOT_VISITED = 0;
+    private String id;
+    private Time startTime;
+    private Time endTime;
+    private LatLng latLng;
+    private String placeName;
     private long date;
     private int visited;
-    private ArrayList<DestinationRoutePoint> destinationRoutePointArrayList;
 
-    @Override
-    public boolean equals(Object obj) {
-        RoutePoint routePoint = (RoutePoint) obj;
-        return (routePoint.getRoutePointName().equals(getRoutePointName())
-                && routePoint.getRoutePointLatLng().equals(getRoutePointLatLng())
-                && routePoint.getRoutePointEndTime().equals(getRoutePointEndTime())
-                && routePoint.getRoutePointPlaceId().equals(getRoutePointPlaceId())
-                && routePoint.getRoutePointStartTime().equals(getRoutePointStartTime())
-        );
-    }
-
-    public RoutePoint(Place routePointPlace, Time routePointStartTime, Time routePointEndTime) {
-        this.routePointPlaceName = "" + routePointPlace.getName();
-        this.routePointPlaceId = routePointPlace.getId();
-        this.routePointLatLng = routePointPlace.getLatLng();
-        this.routePointStartTime = routePointStartTime;
-        this.routePointEndTime = routePointEndTime;
-    }
-
-    public RoutePoint(LatLng routePointLatLng, String routePointPlaceName, String routePointPlaceId, Time routePointStartTime, Time routePointEndTime) {
-        this.routePointLatLng = routePointLatLng;
-        this.routePointPlaceName = routePointPlaceName;
-        this.routePointPlaceId = routePointPlaceId;
-        this.routePointStartTime = routePointStartTime;
-        this.routePointEndTime = routePointEndTime;
-    }
-
-    public void setAddedDate(long date) {
+    public RoutePoint(String id, Time startTime, Time endTime, LatLng latLng, String placeName, long date, int visited) {
+        this.id = id;
+        this.startTime = startTime;
+        this.endTime = endTime;
+        this.latLng = latLng;
+        this.placeName = placeName;
         this.date = date;
+        this.visited = visited;
     }
 
-    public Time getRoutePointStartTime() {
-        return routePointStartTime;
+    public String getId() {
+        return id;
     }
 
-    public Time getRoutePointEndTime() {
-        return routePointEndTime;
+    public Time getStartTime() {
+        return startTime;
+    }
+
+    public Time getEndTime() {
+        return endTime;
+    }
+
+    public LatLng getLatLng() {
+        return latLng;
+    }
+
+    public String getPlaceName() {
+        return placeName;
     }
 
     public long getDate() {
         return date;
     }
 
-    public void setRoutePointStartTime(Time routePointStartTime) {
-        this.routePointStartTime = routePointStartTime;
+    public int getVisited() {
+        return visited;
     }
 
-    public void setRoutePointEndTime(Time routePointEndTime) {
-        this.routePointEndTime = routePointEndTime;
+    public void setStartTime(Time startTime) {
+        this.startTime = startTime;
     }
 
-    public String getRoutePointName() {
-        return this.routePointPlaceName;
+    public void setEndTime(Time endTime) {
+        this.endTime = endTime;
     }
 
-    public String getRoutePointPlaceId() {
-        return routePointPlaceId;
-    }
-
-    public LatLng getRoutePointLatLng() {
-        return routePointLatLng;
+    public void setLatLng(LatLng latLng) {
+        this.latLng = latLng;
     }
 
     public void setVisited(boolean visited) {
@@ -96,36 +77,14 @@ public class RoutePoint implements Parcelable{
             this.visited = NOT_VISITED;
     }
 
-    public int getVisited() {
-        return visited;
-    }
-
-    @Override
-    public int describeContents() {
-        return 0;
-    }
-
-    @Override
-    public void writeToParcel(Parcel parcel, int i) {
-        parcel.writeParcelable(routePointLatLng, i);
-        parcel.writeString(routePointPlaceName);
-        parcel.writeString(routePointPlaceId);
-        parcel.writeParcelable(routePointStartTime, i);
-        parcel.writeParcelable(routePointEndTime, i);
-        parcel.writeLong(date);
-        parcel.writeInt(visited);
-        parcel.writeTypedList(destinationRoutePointArrayList);
-    }
-
     protected RoutePoint(Parcel in) {
-        routePointLatLng = in.readParcelable(LatLng.class.getClassLoader());
-        routePointPlaceName = in.readString();
-        routePointPlaceId = in.readString();
-        routePointStartTime = in.readParcelable(Time.class.getClassLoader());
-        routePointEndTime = in.readParcelable(Time.class.getClassLoader());
+        id = in.readString();
+        startTime = in.readParcelable(Time.class.getClassLoader());
+        endTime = in.readParcelable(Time.class.getClassLoader());
+        latLng = in.readParcelable(LatLng.class.getClassLoader());
+        placeName = in.readString();
         date = in.readLong();
         visited = in.readInt();
-        destinationRoutePointArrayList = in.createTypedArrayList(DestinationRoutePoint.CREATOR);
     }
 
     public static final Creator<RoutePoint> CREATOR = new Creator<RoutePoint>() {
@@ -139,4 +98,20 @@ public class RoutePoint implements Parcelable{
             return new RoutePoint[size];
         }
     };
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel parcel, int i) {
+        parcel.writeString(id);
+        parcel.writeParcelable(startTime, i);
+        parcel.writeParcelable(endTime, i);
+        parcel.writeParcelable(latLng, i);
+        parcel.writeString(placeName);
+        parcel.writeLong(date);
+        parcel.writeInt(visited);
+    }
 }

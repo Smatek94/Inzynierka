@@ -7,7 +7,6 @@ import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
-import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 
 /**
  * Created by Mateusz Skolimowski on 07.04.2017.
@@ -34,7 +33,7 @@ public class RoutePointItemView extends FrameLayout {
     }
 
     private void initPointTextViews() {
-        pointNameTextView.setText(routePoint.getRoutePointName());
-        pointTimeTextView.setText(routePoint.getRoutePointStartTime().toString() + " - " + routePoint.getRoutePointEndTime());
+        pointNameTextView.setText(routePoint.getPlaceName());
+        pointTimeTextView.setText(routePoint.getStartTime().toString() + " - " + routePoint.getEndTime().toString());
     }
 }

@@ -1,7 +1,6 @@
 package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
 import android.content.Intent;
-import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -11,13 +10,15 @@ import android.widget.Toast;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesToNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.lately_added_route_points_dialog.LatelyAddedRoutePointsDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
-import com.example.mateuszskolimowski.inzynierka.model.DestinationRoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
+import com.example.mateuszskolimowski.inzynierka.model.Travel;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.google.android.gms.common.api.Status;
 import com.google.android.gms.location.places.Place;
@@ -30,7 +31,8 @@ import java.util.ArrayList;
 public class AddNewRoutePointActivity extends AppCompatActivity
         implements TimePickerFragment.FragmentResponseListener,
         LatelyAddedRoutePointsDialog.LatelyAddedRoutePointsDialogInterface,
-        GetDistancesFromNewRoutePointApiFragment.FragmentResponseListener{
+        GetDistancesFromNewRoutePointApiFragment.FragmentResponseListener,
+        GetDistancesToNewRoutePointApiFragment.FragmentResponseListener{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_OUTSTATE_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_OUTSTATE_TAG";
@@ -38,6 +40,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private static final String END_TIME_OUT_STATE_TAG = AddOrUpdateNewRouteActivity.class.getName() + "END_TIME_OUT_STATE_TAG";
 
     public static final int ADD_NEW_ROUTE_POINT_ACTIVITY_TAG = 1;
+    private static final int CLEAR_DATA = 1;
+    private static final int FINISH_ACTIVITY_WITH_RESULT = 2;
 
     private View startTimeLayout;
     private TextView startTimeTextView;
@@ -55,6 +59,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private String selectedPlaceId;
     private String selectedPlaceName;
     private PlaceAutocompleteFragment autocompleteFragment;
+    private boolean toFinished;
+    private boolean fromFinished;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -104,20 +110,21 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         availableAddAndContiuneButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                updateRoute();
-                clearData();
+                updateRoute(CLEAR_DATA);
+//                clearData();
             }
         });
         availableAddAndFinishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                finishActivityWithResult(updateRoute());
+                updateRoute(FINISH_ACTIVITY_WITH_RESULT);
+//                finishActivityWithResult();
             }
         });
         chooseFromLastPickedLocationsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                ArrayList<RoutePoint> latelyAddedRoutePoints = Utils.getSQLiteHelper(AddNewRoutePointActivity.this).getLatelyAddedRoutePoints();
+                /*ArrayList<RoutePointDestination> latelyAddedRoutePoints = Utils.getSQLiteHelper(AddNewRoutePointActivity.this).getLatelyAddedRoutePoints();
                 if(latelyAddedRoutePoints.size() == 0){
                     Utils.showMsgDialog(AddNewRoutePointActivity.this,getString(R.string.no_route_points_lately_added));
                 } else {
@@ -127,7 +134,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
                         latelyAddedRoutePointsDialog = LatelyAddedRoutePointsDialog.newInstance(latelyAddedRoutePoints);
                         latelyAddedRoutePointsDialog.show(fragmentManager.beginTransaction(), LatelyAddedRoutePointsDialog.TAG);
                     }
-                }
+                } fixme poprawic liste ostatnich punktow*/
             }
         });
     }
@@ -143,45 +150,109 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         autocompleteFragment.setText("");
     }
 
-    private void finishActivityWithResult(Route route) {
+    private void finishActivityWithResult() {
         Intent intent = getIntent();
         intent.putExtra(AddRoutePointsActivity.ROUTE_RESULT_TAG, route);
         setResult(RESULT_OK, intent);
         finish();
     }
 
-    private Route updateRoute(){
-        RoutePoint routePoint = new RoutePoint(
-                selectedPlaceLatLng,
-                selectedPlaceName,
+    private void updateRoute(int actionType){
+        if(Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId) == null){
+            addRoutePointDestinationToDataBase(selectedPlaceId);
+        }
+        addRoutePointToRoute();
+        getRoutePointDestinationsFromApi(selectedPlaceId,actionType);
+    }
+
+    private Route addRoutePointToRoute() {
+        route.addRoutePointId(new RoutePoint(
                 selectedPlaceId,
                 new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
-                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)));
-
-        getRoutePointDestinationsFromApi(routePoint);
-
-        route.addRoutePoint(routePoint);
+                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)),
+                selectedPlaceLatLng,
+                selectedPlaceName,
+                System.currentTimeMillis(),
+                RoutePoint.NOT_VISITED
+        ));
         Utils.getSQLiteHelper(AddNewRoutePointActivity.this).updateRoutePoints(route);
-        Utils.getSQLiteHelper(AddNewRoutePointActivity.this).addNewLatelyAddedRoutePoint(routePoint);
         return route;
     }
 
-    private void getRoutePointDestinationsFromApi(RoutePoint routePoint) {
-        getDistancesFromNewRoutePoint(routePoint);
-        getDistanceToNewRoutePoint();
+    private void addRoutePointDestinationToDataBase(String selectedPlaceId) {
+        Utils.getSQLiteHelper(this).addRoutePointDestination(selectedPlaceId);
+    }
+
+    private void getRoutePointDestinationsFromApi(String selectedPlaceId, int actionType) {
+        RoutePointDestination newRoutePointDestination = Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId);
+        ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList = getRoutePointsWithoutTravelToNewPoint(newRoutePointDestination);
+
+        if(routePointsWithoutTravelToNewPointList.size() != 0) {
+            getDistancesFromNewRoutePoint(selectedPlaceId, routePointsWithoutTravelToNewPointList, actionType);
+            getDistanceToNewRoutePoint(selectedPlaceId, routePointsWithoutTravelToNewPointList, actionType);
+        } else {
+            handleActionType(actionType);
+        }
+    }
+
+    //funkcja ktora tworzy liste z punktami ktore jeszcze nie wyznaczaly polaczenia z nowo dodanym punktem
+    private ArrayList<RoutePointDestination> getRoutePointsWithoutTravelToNewPoint(RoutePointDestination newRoutePointDestination) {
+        ArrayList<RoutePointDestination> routePointDestinationArrayList = Utils.getSQLiteHelper(this).getRoutePointsDestinationList();
+        ArrayList<RoutePointDestination> resultList = new ArrayList<>();
+        boolean add;
+        for(RoutePointDestination rpd : routePointDestinationArrayList){
+            add = true;
+            if(rpd.getRoutePointPlaceId().equals(newRoutePointDestination.getRoutePointPlaceId())){
+                add = false;
+            }
+            for(Travel travel : rpd.getTravelToPointList()){
+                if(travel.getDestinationPlaceId().equals(newRoutePointDestination.getRoutePointPlaceId())){
+                    add = false;
+                    break;
+                }
+            }
+            if(add){
+                resultList.add(rpd);
+            }
+        }
+        return filterResultList(resultList);
+    }
+
+    //funkcja ktora usuwa punkty ktore nie sa w aktualnie aktywnej trasie
+    private ArrayList<RoutePointDestination> filterResultList(ArrayList<RoutePointDestination> allPointsList) {
+        ArrayList<RoutePointDestination> resultList = new ArrayList<>();
+        for(RoutePointDestination rpd : allPointsList){
+            for(RoutePoint rp : route.getRoutePoints()){
+                if(rp.getId().equals(rpd.getRoutePointPlaceId())){
+                    resultList.add(rpd);
+                    break;
+                }
+            }
+        }
+        return resultList;
     }
 
     //pobiera dane o trasie do nowo danego punktu z api
-    private void getDistanceToNewRoutePoint() {
-
+    private void getDistanceToNewRoutePoint(String selectedPlaceId, ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList, int actionType) {
+        GetDistancesToNewRoutePointApiFragment getDistancesToNewRoutePointApiFragment = (GetDistancesToNewRoutePointApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistancesToNewRoutePointApiFragment.FRAGMENT_TAG);
+        if (getDistancesToNewRoutePointApiFragment == null) {
+            if (Utils.isOnline(this)) {
+                getDistancesToNewRoutePointApiFragment = GetDistancesToNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
+                getSupportFragmentManager().beginTransaction().add(getDistancesToNewRoutePointApiFragment, GetDistancesToNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+//                listener.showLoadingDialog(getString(R.string.loading_data));
+            } else {
+//                listener.showFailureDialog(getString(R.string.no_internet));
+                Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     //pobiranie danych o trasie z nowo dodanego punktu do pozostalych
-    private void getDistancesFromNewRoutePoint(RoutePoint routePoint) {
+    private void getDistancesFromNewRoutePoint(String selectedPlaceId, ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList, int actionType) {
         GetDistancesFromNewRoutePointApiFragment getDistancesFromNewRoutePointApiFragment = (GetDistancesFromNewRoutePointApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG);
         if (getDistancesFromNewRoutePointApiFragment == null) {
             if (Utils.isOnline(this)) {
-                getDistancesFromNewRoutePointApiFragment = GetDistancesFromNewRoutePointApiFragment.newInstance(routePoint,route.getRoutePoints());
+                getDistancesFromNewRoutePointApiFragment = GetDistancesFromNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
                 getSupportFragmentManager().beginTransaction().add(getDistancesFromNewRoutePointApiFragment, GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
 //                listener.showLoadingDialog(getString(R.string.loading_data));
             } else {
@@ -260,26 +331,53 @@ public class AddNewRoutePointActivity extends AppCompatActivity
 
     @Override
     public void onBackPressed() {
-        finishActivityWithResult(route);
+        finishActivityWithResult();
     }
 
     @Override
-    public void latelyAddedRoutePointDialogCallback(RoutePoint routePoint) {
-        FragmentManager fragmentManager = getSupportFragmentManager();
+    public void latelyAddedRoutePointDialogCallback(RoutePointDestination routePointDestination) {
+       /* FragmentManager fragmentManager = getSupportFragmentManager();
         LatelyAddedRoutePointsDialog latelyAddedRoutePointsDialog = (LatelyAddedRoutePointsDialog) fragmentManager.findFragmentByTag(LatelyAddedRoutePointsDialog.TAG);
         if (latelyAddedRoutePointsDialog != null) {
             latelyAddedRoutePointsDialog.dismiss();
         }
-        selectedPlaceLatLng = routePoint.getRoutePointLatLng();
-        selectedPlaceId = routePoint.getRoutePointPlaceId();
-        selectedPlaceName = routePoint.getRoutePointName() + "";
+        selectedPlaceLatLng = routePointDestination.getRoutePointLatLng();
+        selectedPlaceId = routePointDestination.getRoutePointPlaceId();
+        selectedPlaceName = routePointDestination.getRoutePointName() + "";
         autocompleteFragment.setText(selectedPlaceName);
-        checkIfAllInfoAvailable();
+        checkIfAllInfoAvailable(); fixme*/
     }
 
     @Override
-    public void onDoneGetDestinationRoutePoints(ArrayList<DestinationRoutePoint> destinationRoutePoints) {
+    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestination, int actionType) {
+        Utils.getSQLiteHelper(this).updateRoutePointsDestination(routePointDestination);
+        if(toFinished){
+            toFinished = false;
+            fromFinished = false;
+            handleActionType(actionType);
+        } else {
+            fromFinished = true;
+        }
+    }
 
+    @Override
+    public void onDoneGetDestinationRoutePoints(ArrayList<RoutePointDestination> routePointDestinationsList, int actionType) {
+        Utils.getSQLiteHelper(this).updateRoutePointsDestination(routePointDestinationsList);
+        if(fromFinished){
+            toFinished = false;
+            fromFinished = false;
+            handleActionType(actionType);
+        } else {
+            toFinished = true;
+        }
+    }
+
+    private void handleActionType(int actionType) {
+        if(actionType == CLEAR_DATA){
+            clearData();
+        } else if(actionType == FINISH_ACTIVITY_WITH_RESULT){
+            finishActivityWithResult();
+        }
     }
 
     @Override
