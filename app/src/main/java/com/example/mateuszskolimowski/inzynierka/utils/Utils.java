@@ -14,6 +14,7 @@ import android.view.View;
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.application.MyApplication;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
+import com.example.mateuszskolimowski.inzynierka.dialog_fragments.LoadingDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.MsgDialog;
 import com.example.mateuszskolimowski.inzynierka.sqlite.SQLiteHelper;
 
@@ -71,6 +72,15 @@ public class Utils {
         if (msgDialog == null) {
             msgDialog = MsgDialog.newInstance(msg);
             msgDialog.show(fragmentManager.beginTransaction(), MsgDialog.TAG);
+        }
+    }
+
+    public static void showLoadingDialog(String msg, AppCompatActivity appCompatActivity) {
+        FragmentManager fragmentManager = appCompatActivity.getSupportFragmentManager();
+        LoadingDialog loadingDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
+        if(loadingDialog == null){
+            loadingDialog = LoadingDialog.newInstance(msg);
+            loadingDialog.show(fragmentManager.beginTransaction(),LoadingDialog.TAG);
         }
     }
 }

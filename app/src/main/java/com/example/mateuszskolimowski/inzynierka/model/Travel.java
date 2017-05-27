@@ -4,10 +4,14 @@ import android.os.Parcel;
 import android.os.Parcelable;
 
 /**
- * Created by Mateusz Skolimowski on 17.05.2017.
+ * wykorzystywana na dwa sposoby.
+ * 1. jako odleglosc miedzy punktem a jego destinationPlaceId
+ * 2. jako suma czasow i odleglosci calej trasy
  */
 public class Travel implements Parcelable{
 
+    /**czas w ktorym znajduje sie trasa po odwiedzeniu danej ilosci punktow*/
+    private  long routeTime;
     private long duration;
     private double distance;
     private String destinationPlaceId;
@@ -16,6 +20,12 @@ public class Travel implements Parcelable{
         this.duration = duration;
         this.distance = distance;
         this.destinationPlaceId = destinationPlaceId;
+    }
+
+    public Travel(long duration, double distance, long routeTime) {
+        this.duration = duration;
+        this.distance = distance;
+        this.routeTime = routeTime;
     }
 
     public long getDuration() {
@@ -28,6 +38,10 @@ public class Travel implements Parcelable{
 
     public String getDestinationPlaceId() {
         return destinationPlaceId;
+    }
+
+    public long getRouteTime() {
+        return routeTime;
     }
 
     protected Travel(Parcel in) {
@@ -59,4 +73,16 @@ public class Travel implements Parcelable{
             return new Travel[size];
         }
     };
+
+    public void addDistance(double distance) {
+        this.distance += distance;
+    }
+
+    public void addDuration(long duration) {
+        this.duration += duration;
+    }
+
+    public void setRouteTime(long routeTime) {
+        this.routeTime = routeTime;
+    }
 }

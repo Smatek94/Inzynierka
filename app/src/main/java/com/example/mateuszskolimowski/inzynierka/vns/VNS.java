@@ -1,6 +1,7 @@
 package com.example.mateuszskolimowski.inzynierka.vns;
 
 import android.support.v4.util.ArrayMap;
+import android.support.v4.util.Pair;
 import android.support.v7.app.AppCompatActivity;
 
 import com.example.mateuszskolimowski.inzynierka.model.Route;
@@ -27,7 +28,7 @@ public class VNS {
     private static int ilosc;
     private static Route route;
     private static AppCompatActivity appCompatActivity;
-    private static ArrayMap<String, ArrayMap<String, Double>> distFromPointMap;
+    private static ArrayMap<String, ArrayMap<String, Travel>> distFromPointMap;
 
     /**funkcja inicializujaca algorytm VNS.*/
     private static void initVNS(Route routeArg, AppCompatActivity appCompatActivityArg) {
@@ -60,23 +61,23 @@ public class VNS {
             for(int k = 2 ;k < K_MAX; k++){
                 routePoints = shake(routePoints,k);
                 VNSRoute impovedRoute = improvment(new VNSRoute(routePoints));
-                if(impovedRoute.getDistance() < vnsRoute.getDistance()){
+                if(impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()){
                     vnsRoute = impovedRoute;
                     break;
                 }
             }
         }
-        Utils.debugLog("dist  = " + vnsRoute.getDistance());
+        Utils.debugLog("dist  = " + vnsRoute.getTravel().getDistance());
         route.setRoutePoints(vnsRoute.getRoutePoints());
     }
 
     private static VNSRoute improvment(VNSRoute vnsRoute) {
-        double initDist = vnsRoute.getDistance();
+        double initDist = vnsRoute.getTravel().getDistance();
         for(int i = 0 ; i < vnsRoute.getRoutePoints().size() -1 ; i++){
             Collections.swap(vnsRoute.getRoutePoints(),i,i+1);
             vnsRoute.calculateDistance();
-            if(vnsRoute.getDistance() < initDist){
-                initDist = vnsRoute.getDistance();
+            if(vnsRoute.getTravel().getDistance() < initDist){
+                initDist = vnsRoute.getTravel().getDistance();
             } else {
                 Collections.swap(vnsRoute.getRoutePoints(),i+1,i);
                 vnsRoute.calculateDistance();
@@ -173,15 +174,18 @@ public class VNS {
 
     private static void handleRouteFound(ArrayList<RoutePoint> foundRoute) {
         handleProgress();
-        double routeDist = calculateRouteDistance(foundRoute);
-        if(routeDist < minDist || minDist == 0){
-            fasterRoundFound(routeDist,foundRoute);
+        Travel routeTravel = calculateRouteDistance(foundRoute);
+        if(routeTravel != null) {
+            if (routeTravel.getDistance() < minDist || minDist == 0) {
+                fasterRoundFound(routeTravel, foundRoute);
+            }
         }
     }
 
-    private static void fasterRoundFound(double routeDist, ArrayList<RoutePoint> foundRoute) {
-        minDist = routeDist;
-        Utils.debugLog("routeDIst = " + minDist);
+    private static void fasterRoundFound(Travel routeTravel, ArrayList<RoutePoint> foundRoute) {
+        minDist = routeTravel.getDistance();
+        Utils.debugLog("distance = " + minDist);
+        Utils.debugLog("duration = " + routeTravel.getDuration());
         String s = "";
         for (RoutePoint routePoint : foundRoute) {
             s += routePoint.getPlaceName().substring(0, 3) + ";";
@@ -197,12 +201,33 @@ public class VNS {
         }
     }
 
-    private static double calculateRouteDistance(ArrayList<RoutePoint> foundRoute) {
-        double dist = 0;
-        for(int i = 0 ; i < foundRoute.size() - 1 ; i++){
-            dist += distance(foundRoute.get(i).getId(), foundRoute.get(i+1).getId());
+    private static Travel calculateRouteDistance(ArrayList<RoutePoint> foundRoute) {
+        Travel travel = new Travel(0,0,Time.convertTimeToLong(foundRoute.get(0).getStartTime()));
+        for(int i = -1 ; i < foundRoute.size() - 1 ; i++){
+            String fromRoutePointId;
+            if(i == -1)
+                fromRoutePointId = null;
+            else
+                fromRoutePointId = foundRoute.get(i).getId();
+            RoutePoint toRoutePouint = foundRoute.get(i+1);
+            Travel travelFromPointToPoint = getTravelFromPointToPoint(fromRoutePointId, toRoutePouint.getId());
+
+            long endTime = Time.convertTimeToLong(toRoutePouint.getEndTime());
+            long routeTimeAndDuration = travel.getRouteTime() + travelFromPointToPoint.getDuration();
+            if(endTime < routeTimeAndDuration){
+                return null;
+            } else {
+                long startTime = Time.convertTimeToLong(toRoutePouint.getStartTime());
+                if(startTime >= routeTimeAndDuration){
+                    travel.setRouteTime(Time.convertTimeToLong(toRoutePouint.getStartTime()));
+                } else {
+                    travel.setRouteTime(travel.getRouteTime() + travelFromPointToPoint.getDuration());
+                }
+            }
+            travel.addDistance(travelFromPointToPoint.getDistance());
+            travel.addDuration(travelFromPointToPoint.getDuration());
         }
-        return dist;
+        return travel;
     }
 
     /**funkcja tworzaca mape odleglosc z danego punktu do danego punktu.
@@ -211,10 +236,10 @@ public class VNS {
     private static void createDistMatrix() {
         distFromPointMap = new ArrayMap<>();
         for(RoutePoint routePoint : route.getRoutePoints()){
-            ArrayMap<String, Double> distMap = new ArrayMap<>();
+            ArrayMap<String, Travel> distMap = new ArrayMap<>();
             RoutePointDestination routePointDestinationFromDataBase = Utils.getSQLiteHelper(appCompatActivity).getRoutePointDestinationFromDataBase(routePoint.getId());
             for(Travel travel : routePointDestinationFromDataBase.getTravelToPointList()){
-                distMap.put(travel.getDestinationPlaceId(),travel.getDistance());
+                distMap.put(travel.getDestinationPlaceId(),travel);
             }
             distFromPointMap.put(routePoint.getId(),distMap);
         }
@@ -237,42 +262,54 @@ public class VNS {
     }
 
     /**funkcja zwracajaca odleglosc z jednego punktu do drugiego*/
-    public static double distance(String lastRoutePoint, String rp) {
+    public static Travel getTravelFromPointToPoint(String lastRoutePoint, String rp) {
         if(lastRoutePoint != null){
            return distFromPointMap.get(lastRoutePoint).get(rp);
         } else {
-            return 100.0; // fixme odleglosc od miejsca pobytu do danego punktu
+            return new Travel(0,0,""); // fixme odleglosc od miejsca pobytu do danego punktu
         }
+    }
+
+    /** funkcja sprawdza czy wogole jest mozliwosc stworzenia trasy ktora spelnia wymagania uzytkownika
+     * np. punkt trasy moze miec okno czasowe poza oknem czasowym calej trasy*/
+    public static boolean checkIfRouteIsFeasible(Route route) {
+        for(RoutePoint routePoint : route.getRoutePoints()){
+            if(Time.compareTimes(route.getStartTime(), routePoint.getEndTime()) ||
+                    Time.compareTimes(routePoint.getStartTime(), route.getEndTime())){
+                return false;
+            }
+        }
+        return true;
     }
 
     private static class VNSRoute {
         private ArrayList<RoutePoint> routePoints;
-        private double distance;
+        private Travel travel;
 
         public VNSRoute(ArrayList<RoutePoint> routePoints) {
             this.routePoints = new ArrayList<>(routePoints);
-            this.distance = calculateRouteDistance(routePoints);
+            this.travel = calculateRouteDistance(routePoints);
         }
 
         public void setRoutePoints(ArrayList<RoutePoint> routePoints) {
             this.routePoints = routePoints;
         }
 
-        public void setDistance(double distance) {
-            this.distance = distance;
+        public void setTravel(Travel travel) {
+            this.travel = travel;
         }
 
         public ArrayList<RoutePoint> getRoutePoints() {
             return routePoints;
         }
 
-        public double getDistance() {
-            return distance;
+        public Travel getTravel() {
+            return travel;
         }
 
-        public double calculateDistance() {
-            this.distance = calculateRouteDistance(routePoints);
-            return distance;
+        public Travel calculateDistance() {
+            this.travel = calculateRouteDistance(routePoints);
+            return travel;
         }
     }
 }

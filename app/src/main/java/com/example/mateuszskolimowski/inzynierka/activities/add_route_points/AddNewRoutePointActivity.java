@@ -1,6 +1,7 @@
 package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
 import android.content.Intent;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,6 +13,7 @@ import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesToNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
+import com.example.mateuszskolimowski.inzynierka.dialog_fragments.LoadingDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.lately_added_route_points_dialog.LatelyAddedRoutePointsDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
@@ -32,7 +34,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         implements TimePickerFragment.FragmentResponseListener,
         LatelyAddedRoutePointsDialog.LatelyAddedRoutePointsDialogInterface,
         GetDistancesFromNewRoutePointApiFragment.FragmentResponseListener,
-        GetDistancesToNewRoutePointApiFragment.FragmentResponseListener{
+        GetDistancesToNewRoutePointApiFragment.FragmentResponseListener,
+        LoadingDialog.fragmentInteractionInterface{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_OUTSTATE_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_OUTSTATE_TAG";
@@ -239,7 +242,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
             if (Utils.isOnline(this)) {
                 getDistancesToNewRoutePointApiFragment = GetDistancesToNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
                 getSupportFragmentManager().beginTransaction().add(getDistancesToNewRoutePointApiFragment, GetDistancesToNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
-//                listener.showLoadingDialog(getString(R.string.loading_data));
+                Utils.showLoadingDialog("pobieranie danych...",this);
             } else {
 //                listener.showFailureDialog(getString(R.string.no_internet));
                 Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
@@ -254,7 +257,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
             if (Utils.isOnline(this)) {
                 getDistancesFromNewRoutePointApiFragment = GetDistancesFromNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
                 getSupportFragmentManager().beginTransaction().add(getDistancesFromNewRoutePointApiFragment, GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
-//                listener.showLoadingDialog(getString(R.string.loading_data));
+                Utils.showLoadingDialog("pobieranie danych...",this);
             } else {
 //                listener.showFailureDialog(getString(R.string.no_internet));
                 Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
@@ -373,6 +376,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     }
 
     private void handleActionType(int actionType) {
+        hideLoadingDialog();
         if(actionType == CLEAR_DATA){
             clearData();
         } else if(actionType == FINISH_ACTIVITY_WITH_RESULT){
@@ -380,8 +384,22 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         }
     }
 
+    public void hideLoadingDialog() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        LoadingDialog customDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
+        if(customDialog != null){
+            //customDialog.dismiss();
+            customDialog.dismissAllowingStateLoss();
+        }
+    }
+
     @Override
     public void onFailureListener(String msg, int statusCode) {
 
+    }
+
+    @Override
+    public void backPressedWhenDialogWasVisible() {
+        finish();
     }
 }

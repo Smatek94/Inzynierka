@@ -1,6 +1,8 @@
 package com.example.mateuszskolimowski.inzynierka.api_utils;
 
 
+import android.app.Activity;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 
@@ -83,19 +85,33 @@ public abstract class RequestFragment extends Fragment {
         }
     }
 
-    private void parseJSONObject(JSONObject resposne, int statusCode) {
-        try {
-            if (statusCode == 200) {
-                parseData(resposne);
-                handleIfFragmentPausedRequestSucced();
-            } else {
-                failMsg = resposne.getString("message");
-                failStatusCode = statusCode;
-                handleIfFragmentPausedRequestFail();
+    private void parseJSONObject(final JSONObject resposne, final int statusCode) {
+        new AsyncTask<Void,Void,Void>() {
+            @Override
+            protected Void doInBackground(Void... voids) {
+                try {
+                    if (statusCode == 200) {
+                        parseData(resposne);
+                        Activity activity = getActivity();
+                        if(activity != null) {
+                            handleIfFragmentPausedRequestSucced();
+                        }
+                    } else {
+                        failMsg = resposne.getString("message");
+                        failStatusCode = statusCode;
+                        handleIfFragmentPausedRequestFail();
+                    }
+                } catch (JSONException e) {
+                    e.printStackTrace();
+                }
+                return null;
             }
-        } catch (JSONException e) {
-            e.printStackTrace();
-        }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
     }
 
     protected abstract void parseData(JSONObject resposne) throws JSONException;

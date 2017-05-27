@@ -67,4 +67,19 @@ public class Time implements Parcelable{
         parcel.writeInt(hour);
         parcel.writeInt(minute);
     }
+    /** funkcja porownuje dwa czasy. jezeli pierwszy jest "wiekszy" to zwraca true, jezeli drugi to false*/
+    public static boolean compareTimes(Time firstTime, Time secondTime) {
+        if(firstTime.getHour() > secondTime.getHour()){
+            return true;
+        } else if(firstTime.getHour() == secondTime.getHour()){
+            if(firstTime.getMinute() > secondTime.getMinute()){
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public static long convertTimeToLong(Time startTime) {
+        return (startTime.getHour()*60 + startTime.getMinute())*60*1000;
+    }
 }

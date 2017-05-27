@@ -1,7 +1,14 @@
 package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
+import android.Manifest;
 import android.app.Activity;
 import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.location.Location;
+import android.location.LocationManager;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.v4.app.ActivityCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -13,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
@@ -26,20 +34,26 @@ import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.Travel;
+import com.example.mateuszskolimowski.inzynierka.utils.PermissionsUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 import com.example.mateuszskolimowski.inzynierka.vns.VNS;
+import com.google.android.gms.common.ConnectionResult;
+import com.google.android.gms.common.api.GoogleApiClient;
+import com.google.android.gms.location.LocationServices;
 
 import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
         TimePickerFragment.FragmentResponseListener,
-        EditRoutePointTimeDialog.EditRoutePointTimeInterace {
+        EditRoutePointTimeDialog.EditRoutePointTimeInterace, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
     public static final String ROUTE_OUTSTATE_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_OUTSTATE_TAG";
+    private static final int GET_LOCATION_PERMISSION_REQUEST_CODE = 1;
+    private static final String[] permissions = new String[]{Manifest.permission.ACCESS_COARSE_LOCATION};
     private Route route;
     private TextView noRoutePointsTextView;
     private Button addRoutePointButton;
@@ -48,6 +62,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private ItemTouchHelper.Callback callback;
     private ItemTouchHelper touchHelper;
     private MenuInflater inflater;
+    private GoogleApiClient mGoogleApiClient;
+    private Location mLastLocation;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +77,13 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         setContentView(R.layout.activity_add_route_points);
         getLayoutComponents();
         setUpGUI();
+        if (mGoogleApiClient == null) {
+            mGoogleApiClient = new GoogleApiClient.Builder(this)
+                    .addConnectionCallbacks(this)
+                    .addOnConnectionFailedListener(this)
+                    .addApi(LocationServices.API)
+                    .build();
+        }
     }
 
     @Override
@@ -89,7 +112,13 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 break;
             }
             case R.id.action_optimize: {
-                optimizeRoute();
+                if (VNS.checkIfRouteIsFeasible(route)) {
+                    if(PermissionsUtils.requestPermission(this,this,permissions,GET_LOCATION_PERMISSION_REQUEST_CODE)){
+                        permissionAcceptedOptimzeRoute();
+                    }
+                } else {
+                    Toast.makeText(getApplicationContext(), "Trasa nie jest poprawna. Któreś z okien czasowych punktu trasy nie zawiera się w oknie czasowym całej trasy", Toast.LENGTH_LONG).show();
+                }
                 break;
             }
             case R.id.action_navigate: {
@@ -102,9 +131,21 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    private void permissionAcceptedOptimzeRoute() {
+        LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
+        if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            Intent gpsOptionsIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+            startActivity(gpsOptionsIntent);
+        } else {
+            optimizeRoute();
+        }
+
+    }
+
     private void optimizeRoute() {
-        Route x = VNS.optimal(route,this);
-//        Route x2 = VNS.VNS(route,this);
+        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+        Route x = VNS.optimal(route, this);
+        Route x2 = VNS.VNS(route,this);
     }
 
     @Override
@@ -229,5 +270,44 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         route.getRoutePoints().get(index).setEndTime(endTime);
         routePointsRecyclerViewAdapter.notifyDataSetChanged();
         updateRoute(AddRoutePointsActivity.this, route);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        if(requestCode == GET_LOCATION_PERMISSION_REQUEST_CODE){
+            PermissionsUtils.handleRequestPermissionResult(grantResults,this,permissions,"Te pozwolenia są potrzebne aby poprawnie wyznaczać trasę.","Bez zaakceptowania pozwolenia nie możesz wyznaczać punktów trasy. Przejdź do ustawień aplikacji aby edytować pozwolenia.",
+                    new PermissionsUtils.OnPermissionResultListener() {
+                        @Override
+                        public void onDone() {
+                            permissionAcceptedOptimzeRoute();
+                        }
+                    });
+        }
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public void onConnected(@Nullable Bundle bundle) {
+//        mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
+    }
+
+    @Override
+    public void onConnectionSuspended(int i) {
+
+    }
+
+    protected void onStart() {
+        mGoogleApiClient.connect();
+        super.onStart();
+    }
+
+    protected void onStop() {
+        mGoogleApiClient.disconnect();
+        super.onStop();
+    }
+
+    @Override
+    public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
+
     }
 }
