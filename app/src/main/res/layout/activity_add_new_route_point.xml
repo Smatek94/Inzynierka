@@ -28,12 +28,12 @@
         android:name="com.google.android.gms.location.places.ui.PlaceAutocompleteFragment"
         />
 
-    <Button
+    <!--<Button
         android:id="@+id/choose_from_last_picked_locations_button"
         android:theme="@style/ButtonStyle.Available"
         android:text="@string/choose_from_last_picked_locations"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content" />
+        android:layout_height="wrap_content" />-->
 
     <RelativeLayout
         android:layout_width="match_parent"

@@ -33,7 +33,7 @@ public abstract class RequestFragment extends Fragment {
                     }
                 });
             } else { fixme ewentualnie odkomentowac jakbym jednak chcial sleepa ;)*/
-                parseResponse(object, statusCode);
+            parseResponse(object, statusCode);
 //            }
         }
     });
@@ -75,7 +75,7 @@ public abstract class RequestFragment extends Fragment {
         }
     }
 
-    protected void parseResponse(Object resposne, int statusCode){
+    protected void parseResponse(Object resposne, int statusCode) {
         if (resposne == null) {
 //            failMsg = getString(R.string.cant_connect_to_server);
             failMsg = "nie udalo sie pobrac danych";
@@ -86,32 +86,36 @@ public abstract class RequestFragment extends Fragment {
     }
 
     private void parseJSONObject(final JSONObject resposne, final int statusCode) {
-        new AsyncTask<Void,Void,Void>() {
-            @Override
-            protected Void doInBackground(Void... voids) {
-                try {
-                    if (statusCode == 200) {
-                        parseData(resposne);
+        try {
+            if (statusCode == 200) {
+                new AsyncTask<Void,Void,Void>(){
+
+                    @Override
+                    protected Void doInBackground(Void... voids) {
+                        try {
+                            parseData(resposne);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                        }
+                        return null;
+                    }
+
+                    @Override
+                    protected void onPostExecute(Void aVoid) {
                         Activity activity = getActivity();
-                        if(activity != null) {
+                        if (activity != null) {
                             handleIfFragmentPausedRequestSucced();
                         }
-                    } else {
-                        failMsg = resposne.getString("message");
-                        failStatusCode = statusCode;
-                        handleIfFragmentPausedRequestFail();
+                        super.onPostExecute(aVoid);
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                }
-                return null;
+                }.execute();
+            } else {
+                failMsg = resposne.getString("message");
+                handleIfFragmentPausedRequestFail();
             }
-
-            @Override
-            protected void onPostExecute(Void aVoid) {
-                super.onPostExecute(aVoid);
-            }
-        }.execute();
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
     }
 
     protected abstract void parseData(JSONObject resposne) throws JSONException;
@@ -133,21 +137,23 @@ public abstract class RequestFragment extends Fragment {
     }
 
     private void onDoneRequestHandler() {
-        onDoneRequest();
-        if (getActivity() != null)
+        if (getActivity() != null) {
+            onDoneRequest();
             getActivity().getSupportFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
+        }
     }
 
     public abstract void onDoneRequest();
 
     private void onFail() {
-        onFailRequestHandler(failMsg,failStatusCode);
+        onFailRequestHandler(failMsg, failStatusCode);
     }
 
     private void onFailRequestHandler(String msg, int statusCode) {
-        onFailRequest(msg,statusCode);
-        if (getActivity() != null)
+        if (getActivity() != null){
+            onFailRequest(msg, statusCode);
             getActivity().getSupportFragmentManager().beginTransaction().remove(this).commitAllowingStateLoss();
+        }
     }
 
     public abstract void onFailRequest(String msg, int statusCode);

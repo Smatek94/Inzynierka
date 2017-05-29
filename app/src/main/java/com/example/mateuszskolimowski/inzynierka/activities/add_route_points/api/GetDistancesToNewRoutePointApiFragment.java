@@ -71,6 +71,7 @@ public class GetDistancesToNewRoutePointApiFragment extends RequestFragment {
 
     @Override
     protected void parseData(JSONObject resposne) throws JSONException {
+        double time = System.currentTimeMillis();
         Utils.debugLog("" + resposne);
         JSONArray rows = resposne.getJSONArray("rows");
         for (int i = 0; i < rows.length(); i++) {
@@ -80,10 +81,15 @@ public class GetDistancesToNewRoutePointApiFragment extends RequestFragment {
             if (travelData.getString("status").equals("OK")) {
                 JSONObject distance = travelData.getJSONObject("distance");
                 JSONObject duration = travelData.getJSONObject("duration");
-                RoutePointDestination routePointDestination = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(TO_ROUTE_POINT_EXTRA_TAG));
-                routePointDestinationsList.get(i).addTravel(new Travel(duration.getLong("value"), distance.getLong("value"), routePointDestination.getRoutePointPlaceId()));
+                if(getActivity() != null) {
+                    RoutePointDestination routePointDestination = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(TO_ROUTE_POINT_EXTRA_TAG));
+                    routePointDestinationsList.get(i).addTravel(new Travel(duration.getLong("value"), distance.getLong("value"), routePointDestination.getRoutePointPlaceId()));
+                } else {
+                    break;
+                }
             }
         }
+        Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
     }
 
     @Override

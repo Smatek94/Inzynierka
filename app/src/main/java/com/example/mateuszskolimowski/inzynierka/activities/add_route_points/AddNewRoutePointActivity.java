@@ -1,6 +1,7 @@
 package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
 import android.content.Intent;
+import android.os.AsyncTask;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -56,7 +57,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private View unavailableButtonsLayout;
     private Button availableAddAndContiuneButton;
     private Button availableAddAndFinishButton;
-    private Button chooseFromLastPickedLocationsButton;
+//    private Button chooseFromLastPickedLocationsButton;
     private Route route;
     private LatLng selectedPlaceLatLng;
     private String selectedPlaceId;
@@ -64,6 +65,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private PlaceAutocompleteFragment autocompleteFragment;
     private boolean toFinished;
     private boolean fromFinished;
+    private long time;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -100,7 +102,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         unavailableButtonsLayout = findViewById(R.id.unavailable_buttons_layout);
         availableAddAndContiuneButton = (Button) findViewById(R.id.available_add_and_contiune_button);
         availableAddAndFinishButton = (Button) findViewById(R.id.available_add_and_finish_button);
-        chooseFromLastPickedLocationsButton = (Button) findViewById(R.id.choose_from_last_picked_locations_button);
+//        chooseFromLastPickedLocationsButton = (Button) findViewById(R.id.choose_from_last_picked_locations_button);
     }
 
     private void setUpGUI() {
@@ -124,10 +126,10 @@ public class AddNewRoutePointActivity extends AppCompatActivity
 //                finishActivityWithResult();
             }
         });
-        chooseFromLastPickedLocationsButton.setOnClickListener(new View.OnClickListener() {
+        /*chooseFromLastPickedLocationsButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                /*ArrayList<RoutePointDestination> latelyAddedRoutePoints = Utils.getSQLiteHelper(AddNewRoutePointActivity.this).getLatelyAddedRoutePoints();
+                ArrayList<RoutePointDestination> latelyAddedRoutePoints = Utils.getSQLiteHelper(AddNewRoutePointActivity.this).getLatelyAddedRoutePoints();
                 if(latelyAddedRoutePoints.size() == 0){
                     Utils.showMsgDialog(AddNewRoutePointActivity.this,getString(R.string.no_route_points_lately_added));
                 } else {
@@ -137,9 +139,9 @@ public class AddNewRoutePointActivity extends AppCompatActivity
                         latelyAddedRoutePointsDialog = LatelyAddedRoutePointsDialog.newInstance(latelyAddedRoutePoints);
                         latelyAddedRoutePointsDialog.show(fragmentManager.beginTransaction(), LatelyAddedRoutePointsDialog.TAG);
                     }
-                } fixme poprawic liste ostatnich punktow*/
+                }
             }
-        });
+        });*/
     }
 
     private void clearData() {
@@ -160,12 +162,21 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         finish();
     }
 
-    private void updateRoute(int actionType){
-        if(Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId) == null){
-            addRoutePointDestinationToDataBase(selectedPlaceId);
+    private void updateRoute(final int actionType){
+        if (Utils.isOnline(this)) {
+            Utils.showLoadingDialog("pobieranie danych...",this);
+            time = System.currentTimeMillis();
+            if(Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId) == null){
+                addRoutePointDestinationToDataBase(selectedPlaceId);
+            }
+            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
+            addRoutePointToRoute();
+            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
+            getRoutePointDestinationsFromApi(selectedPlaceId,actionType);
+            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
+        } else {
+            Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
         }
-        addRoutePointToRoute();
-        getRoutePointDestinationsFromApi(selectedPlaceId,actionType);
     }
 
     private Route addRoutePointToRoute() {
@@ -186,7 +197,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
         Utils.getSQLiteHelper(this).addRoutePointDestination(selectedPlaceId);
     }
 
-    private void getRoutePointDestinationsFromApi(String selectedPlaceId, int actionType) {
+    private void getRoutePointDestinationsFromApi(final String selectedPlaceId, final int actionType) {
         RoutePointDestination newRoutePointDestination = Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId);
         ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList = getRoutePointsWithoutTravelToNewPoint(newRoutePointDestination);
 
@@ -239,14 +250,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private void getDistanceToNewRoutePoint(String selectedPlaceId, ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList, int actionType) {
         GetDistancesToNewRoutePointApiFragment getDistancesToNewRoutePointApiFragment = (GetDistancesToNewRoutePointApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistancesToNewRoutePointApiFragment.FRAGMENT_TAG);
         if (getDistancesToNewRoutePointApiFragment == null) {
-            if (Utils.isOnline(this)) {
                 getDistancesToNewRoutePointApiFragment = GetDistancesToNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
                 getSupportFragmentManager().beginTransaction().add(getDistancesToNewRoutePointApiFragment, GetDistancesToNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
-                Utils.showLoadingDialog("pobieranie danych...",this);
-            } else {
-//                listener.showFailureDialog(getString(R.string.no_internet));
-                Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -254,14 +259,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private void getDistancesFromNewRoutePoint(String selectedPlaceId, ArrayList<RoutePointDestination> routePointsWithoutTravelToNewPointList, int actionType) {
         GetDistancesFromNewRoutePointApiFragment getDistancesFromNewRoutePointApiFragment = (GetDistancesFromNewRoutePointApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG);
         if (getDistancesFromNewRoutePointApiFragment == null) {
-            if (Utils.isOnline(this)) {
                 getDistancesFromNewRoutePointApiFragment = GetDistancesFromNewRoutePointApiFragment.newInstance(selectedPlaceId,routePointsWithoutTravelToNewPointList, actionType);
                 getSupportFragmentManager().beginTransaction().add(getDistancesFromNewRoutePointApiFragment, GetDistancesFromNewRoutePointApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
-                Utils.showLoadingDialog("pobieranie danych...",this);
-            } else {
-//                listener.showFailureDialog(getString(R.string.no_internet));
-                Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
-            }
         }
     }
 
@@ -352,8 +351,10 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestination, int actionType) {
+    public void onDoneGetDestinationRoutePoints(final RoutePointDestination routePointDestination, final int actionType) {
+        Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
         Utils.getSQLiteHelper(this).updateRoutePointsDestination(routePointDestination);
+        Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
         if(toFinished){
             toFinished = false;
             fromFinished = false;
@@ -364,15 +365,27 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     }
 
     @Override
-    public void onDoneGetDestinationRoutePoints(ArrayList<RoutePointDestination> routePointDestinationsList, int actionType) {
-        Utils.getSQLiteHelper(this).updateRoutePointsDestination(routePointDestinationsList);
-        if(fromFinished){
-            toFinished = false;
-            fromFinished = false;
-            handleActionType(actionType);
-        } else {
-            toFinished = true;
-        }
+    public void onDoneGetDestinationRoutePoints(final ArrayList<RoutePointDestination> routePointDestinationsList, final int actionType) {
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Utils.getSQLiteHelper(AddNewRoutePointActivity.this).updateRoutePointsDestination(routePointDestinationsList);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                if(fromFinished){
+                    toFinished = false;
+                    fromFinished = false;
+                    handleActionType(actionType);
+                } else {
+                    toFinished = true;
+                }
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
     }
 
     private void handleActionType(int actionType) {
@@ -386,9 +399,9 @@ public class AddNewRoutePointActivity extends AppCompatActivity
 
     public void hideLoadingDialog() {
         FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.executePendingTransactions();
         LoadingDialog customDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
         if(customDialog != null){
-            //customDialog.dismiss();
             customDialog.dismissAllowingStateLoss();
         }
     }

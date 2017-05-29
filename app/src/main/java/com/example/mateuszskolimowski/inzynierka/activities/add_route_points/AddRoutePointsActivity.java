@@ -6,9 +6,11 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
+import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -27,7 +29,9 @@ import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateA
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
+import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AskForGPSDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
+import com.example.mateuszskolimowski.inzynierka.dialog_fragments.LoadingDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.TimePickerFragment;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
@@ -47,7 +51,10 @@ import java.util.ArrayList;
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
         TimePickerFragment.FragmentResponseListener,
-        EditRoutePointTimeDialog.EditRoutePointTimeInterace, GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener {
+        EditRoutePointTimeDialog.EditRoutePointTimeInterace,
+        GoogleApiClient.ConnectionCallbacks,
+        GoogleApiClient.OnConnectionFailedListener,
+        AskForGPSDialog.AskForGPSDialogInterface{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
@@ -64,6 +71,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private MenuInflater inflater;
     private GoogleApiClient mGoogleApiClient;
     private Location mLastLocation;
+    private boolean gpsIntentWasLaunched;
+    private boolean permissionAcceptedOptimizeRoute;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,6 +93,29 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                     .addApi(LocationServices.API)
                     .build();
         }
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        if(gpsIntentWasLaunched){
+            permissionAcceptedOptimzeRoute();
+        }
+        gpsIntentWasLaunched = false;
+        if(permissionAcceptedOptimizeRoute){//dodalem to bo onPermissionResultJest callowany przed OnResume i dlatego nie mozna tak pokazac dialogu
+            permissionAcceptedOptimzeRoute();
+        }
+        permissionAcceptedOptimizeRoute = false;
+    }
+
+    @Override
+    public void onSaveInstanceState(Bundle outState, PersistableBundle outPersistentState) {
+        super.onSaveInstanceState(outState, outPersistentState);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
     }
 
     @Override
@@ -112,13 +144,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 break;
             }
             case R.id.action_optimize: {
-                if (VNS.checkIfRouteIsFeasible(route)) {
-                    if(PermissionsUtils.requestPermission(this,this,permissions,GET_LOCATION_PERMISSION_REQUEST_CODE)){
-                        permissionAcceptedOptimzeRoute();
-                    }
-                } else {
-                    Toast.makeText(getApplicationContext(), "Trasa nie jest poprawna. Któreś z okien czasowych punktu trasy nie zawiera się w oknie czasowym całej trasy", Toast.LENGTH_LONG).show();
-                }
+                actionOptimize();
                 break;
             }
             case R.id.action_navigate: {
@@ -131,21 +157,40 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         return super.onOptionsItemSelected(item);
     }
 
+    private void actionOptimize() {
+        if (VNS.checkIfRouteIsFeasible(route)) {
+            if(PermissionsUtils.requestPermission(this,this,permissions,GET_LOCATION_PERMISSION_REQUEST_CODE)){
+                permissionAcceptedOptimzeRoute();
+            }
+        } else {
+            Toast.makeText(getApplicationContext(), "Trasa nie jest poprawna. Któreś z okien czasowych punktu trasy nie zawiera się w oknie czasowym całej trasy", Toast.LENGTH_LONG).show();
+        }
+    }
+
     private void permissionAcceptedOptimzeRoute() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Intent gpsOptionsIntent = new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            startActivity(gpsOptionsIntent);
+            showAskForGPSDialog();
         } else {
             optimizeRoute();
         }
 
     }
 
+    private void showAskForGPSDialog() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        AskForGPSDialog askForGPSDialog = (AskForGPSDialog) fragmentManager.findFragmentByTag(AskForGPSDialog.TAG);
+        if(askForGPSDialog == null){
+            askForGPSDialog = AskForGPSDialog.newInstance();
+            askForGPSDialog.show(fragmentManager.beginTransaction(),AskForGPSDialog.TAG);
+        }
+    }
+
     private void optimizeRoute() {
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
         Route x = VNS.optimal(route, this);
-        Route x2 = VNS.VNS(route,this);
+        //fixme pobrac dane o trasie z lokalizacji do pozostalych
+//        Route x2 = VNS.VNS(route,this);
     }
 
     @Override
@@ -279,7 +324,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                     new PermissionsUtils.OnPermissionResultListener() {
                         @Override
                         public void onDone() {
-                            permissionAcceptedOptimzeRoute();
+                            permissionAcceptedOptimizeRoute = true;
                         }
                     });
         }
@@ -309,5 +354,10 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     public void onConnectionFailed(@NonNull ConnectionResult connectionResult) {
 
+    }
+
+    @Override
+    public void okClicked() {
+        gpsIntentWasLaunched = true;
     }
 }

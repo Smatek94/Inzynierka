@@ -65,13 +65,18 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
             @Override
             public void onMapReady(GoogleMap googleMap) {
                 map = googleMap;
-                markerList = new ArrayList<>();
-                initMapMarkers();
-                if (savedInstanceState != null) {
-                    moveCamera((CameraPosition) savedInstanceState.getParcelable(CAMERA_POSITION_OUT_STATE_TAG));
-                } else {
-                    animateCamera();
-                }
+                map.setOnMapLoadedCallback(new GoogleMap.OnMapLoadedCallback() {
+                    @Override
+                    public void onMapLoaded() {
+                        markerList = new ArrayList<>();
+                        initMapMarkers();
+                        if (savedInstanceState != null) {
+                            moveCamera((CameraPosition) savedInstanceState.getParcelable(CAMERA_POSITION_OUT_STATE_TAG));
+                        } else {
+                            animateCamera();
+                        }
+                    }
+                });
             }
         });
         getSupportFragmentManager().beginTransaction().replace(R.id.map_container, supportMapFragment).commit();

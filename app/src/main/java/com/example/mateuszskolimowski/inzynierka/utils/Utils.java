@@ -5,6 +5,7 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -17,6 +18,8 @@ import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDial
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.LoadingDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.MsgDialog;
 import com.example.mateuszskolimowski.inzynierka.sqlite.SQLiteHelper;
+
+import java.util.List;
 
 /**
  * Created by Mateusz Skolimowski on 07.03.2017.
@@ -77,6 +80,7 @@ public class Utils {
 
     public static void showLoadingDialog(String msg, AppCompatActivity appCompatActivity) {
         FragmentManager fragmentManager = appCompatActivity.getSupportFragmentManager();
+        fragmentManager.executePendingTransactions();
         LoadingDialog loadingDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
         if(loadingDialog == null){
             loadingDialog = LoadingDialog.newInstance(msg);
