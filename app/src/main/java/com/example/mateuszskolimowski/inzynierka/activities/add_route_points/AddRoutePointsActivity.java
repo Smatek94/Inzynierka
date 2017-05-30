@@ -6,6 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
+import android.os.Handler;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -25,6 +26,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistanceFromYourLocalizationApiFragment;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
@@ -54,7 +57,9 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         EditRoutePointTimeDialog.EditRoutePointTimeInterace,
         GoogleApiClient.ConnectionCallbacks,
         GoogleApiClient.OnConnectionFailedListener,
-        AskForGPSDialog.AskForGPSDialogInterface{
+        AskForGPSDialog.AskForGPSDialogInterface,
+        GetDistanceFromYourLocalizationApiFragment.FragmentResponseListener,
+        LoadingDialog.fragmentInteractionInterface{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
@@ -98,12 +103,12 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        if(gpsIntentWasLaunched){
+        if (gpsIntentWasLaunched) {
             permissionAcceptedOptimzeRoute();
         }
         gpsIntentWasLaunched = false;
-        if(permissionAcceptedOptimizeRoute){//dodalem to bo onPermissionResultJest callowany przed OnResume i dlatego nie mozna tak pokazac dialogu
-            permissionAcceptedOptimzeRoute();
+        if (permissionAcceptedOptimizeRoute) {//dodalem to bo onPermissionResultJest callowany przed OnResume i dlatego nie mozna tak pokazac dialogu
+            actionOptimize();
         }
         permissionAcceptedOptimizeRoute = false;
     }
@@ -158,11 +163,13 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     }
 
     private void actionOptimize() {
+        Utils.showLoadingDialog("optymalizacja trasy...",this);
         if (VNS.checkIfRouteIsFeasible(route)) {
-            if(PermissionsUtils.requestPermission(this,this,permissions,GET_LOCATION_PERMISSION_REQUEST_CODE)){
+            if (PermissionsUtils.requestPermission(this, this, permissions, GET_LOCATION_PERMISSION_REQUEST_CODE)) {
                 permissionAcceptedOptimzeRoute();
             }
         } else {
+            hideLoadingDialog();
             Toast.makeText(getApplicationContext(), "Trasa nie jest poprawna. Któreś z okien czasowych punktu trasy nie zawiera się w oknie czasowym całej trasy", Toast.LENGTH_LONG).show();
         }
     }
@@ -170,6 +177,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private void permissionAcceptedOptimzeRoute() {
         LocationManager locationManager = (LocationManager) getSystemService(LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
+            hideLoadingDialog();
             showAskForGPSDialog();
         } else {
             optimizeRoute();
@@ -180,17 +188,32 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private void showAskForGPSDialog() {
         FragmentManager fragmentManager = getSupportFragmentManager();
         AskForGPSDialog askForGPSDialog = (AskForGPSDialog) fragmentManager.findFragmentByTag(AskForGPSDialog.TAG);
-        if(askForGPSDialog == null){
+        if (askForGPSDialog == null) {
             askForGPSDialog = AskForGPSDialog.newInstance();
-            askForGPSDialog.show(fragmentManager.beginTransaction(),AskForGPSDialog.TAG);
+            askForGPSDialog.show(fragmentManager.beginTransaction(), AskForGPSDialog.TAG);
         }
     }
 
     private void optimizeRoute() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+            return;
+        }
         mLastLocation = LocationServices.FusedLocationApi.getLastLocation(mGoogleApiClient);
-        Route x = VNS.optimal(route, this);
-        //fixme pobrac dane o trasie z lokalizacji do pozostalych
-//        Route x2 = VNS.VNS(route,this);
+        if (mLastLocation != null) {
+            Utils.debugLog("mlastloc : " + mLastLocation.getLongitude() + ";" + mLastLocation.getLatitude());
+            getRouteDirectionsFromYourLocalization(mLastLocation);
+        } else {
+            hideLoadingDialog();
+            Toast.makeText(AddRoutePointsActivity.this, "Nie udalo pobrac sie lokalizacji, spróbuj jeszcze raz za chwilę.", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    private void getRouteDirectionsFromYourLocalization(Location mLastLocation) {
+        GetDistanceFromYourLocalizationApiFragment getDistanceFromYourLocalizationApiFragment = (GetDistanceFromYourLocalizationApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG);
+        if (getDistanceFromYourLocalizationApiFragment == null) {
+            getDistanceFromYourLocalizationApiFragment = GetDistanceFromYourLocalizationApiFragment.newInstance(mLastLocation, route.getRoutePoints());
+            getSupportFragmentManager().beginTransaction().add(getDistanceFromYourLocalizationApiFragment, GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+        }
     }
 
     @Override
@@ -319,8 +342,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
-        if(requestCode == GET_LOCATION_PERMISSION_REQUEST_CODE){
-            PermissionsUtils.handleRequestPermissionResult(grantResults,this,permissions,"Te pozwolenia są potrzebne aby poprawnie wyznaczać trasę.","Bez zaakceptowania pozwolenia nie możesz wyznaczać punktów trasy. Przejdź do ustawień aplikacji aby edytować pozwolenia.",
+        if (requestCode == GET_LOCATION_PERMISSION_REQUEST_CODE) {
+            PermissionsUtils.handleRequestPermissionResult(grantResults, this, permissions, "Te pozwolenia są potrzebne aby poprawnie wyznaczać trasę.", "Bez zaakceptowania pozwolenia nie możesz wyznaczać punktów trasy. Przejdź do ustawień aplikacji aby edytować pozwolenia.",
                     new PermissionsUtils.OnPermissionResultListener() {
                         @Override
                         public void onDone() {
@@ -359,5 +382,31 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     public void okClicked() {
         gpsIntentWasLaunched = true;
+    }
+
+    public void hideLoadingDialog() {
+        FragmentManager fragmentManager = getSupportFragmentManager();
+        fragmentManager.executePendingTransactions();
+        LoadingDialog customDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
+        if(customDialog != null){
+            customDialog.dismissAllowingStateLoss();
+        }
+    }
+
+    @Override
+    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestinations) {
+        Route x = VNS.optimal(route, this);//fixme dodac async task, dodac uwzglednienie odleglosci z lokalizacji
+        hideLoadingDialog();
+//            Route x2 = VNS.VNS(route,this);
+    }
+
+    @Override
+    public void onFailureListener(String msg, int statusCode) {
+        hideLoadingDialog();
+    }
+
+    @Override
+    public void backPressedWhenDialogWasVisible() {
+        finish();
     }
 }
