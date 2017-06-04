@@ -6,4 +6,6 @@ package com.example.mateuszskolimowski.inzynierka.views;
 
 public interface ItemTouchHelperAdapterInterface {
     void onItemMove(int fromPosition, int toPosition);
+
+    void updateRoute();
 }

@@ -82,7 +82,7 @@ public class GetDistanceFromYourLocalizationApiFragment extends RequestFragment 
                 JSONObject duration = travelData.getJSONObject("duration");
                 RoutePoint routePointDestination = (RoutePoint) getArguments().getParcelableArrayList(TO_ROUTE_POINTS_ARRAY_LIST_EXTRA_TAG).get(i);
                 routePointDestinations.addTravel(new Travel(
-                        duration.getLong("value"),
+                        duration.getLong("value")*1000,
                         distance.getLong("value"),
                         routePointDestination.getId()
                 ));

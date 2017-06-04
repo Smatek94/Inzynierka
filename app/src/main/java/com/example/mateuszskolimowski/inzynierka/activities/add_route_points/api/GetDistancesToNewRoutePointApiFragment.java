@@ -83,7 +83,7 @@ public class GetDistancesToNewRoutePointApiFragment extends RequestFragment {
                 JSONObject duration = travelData.getJSONObject("duration");
                 if(getActivity() != null) {
                     RoutePointDestination routePointDestination = Utils.getSQLiteHelper(getActivity()).getRoutePointDestinationFromDataBase(getArguments().getString(TO_ROUTE_POINT_EXTRA_TAG));
-                    routePointDestinationsList.get(i).addTravel(new Travel(duration.getLong("value"), distance.getLong("value"), routePointDestination.getRoutePointPlaceId()));
+                    routePointDestinationsList.get(i).addTravel(new Travel(duration.getLong("value")*1000, distance.getLong("value"), routePointDestination.getRoutePointPlaceId()));
                 } else {
                     break;
                 }

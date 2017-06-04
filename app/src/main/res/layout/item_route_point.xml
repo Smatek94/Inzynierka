@@ -14,7 +14,7 @@
         android:layout_alignParentRight="true"
         android:layout_centerVertical="true">
 
-        <ImageView
+        <!--<ImageView
             android:id="@+id/move_down_route_point_imageview"
             android:layout_width="@dimen/route_item_icon_size"
             android:layout_height="@dimen/route_item_icon_size"
@@ -28,14 +28,13 @@
             android:layout_centerVertical="true"
             android:rotation="180"
             android:layout_toRightOf="@id/move_down_route_point_imageview"
-            android:src="@mipmap/ic_expand" />
+            android:src="@mipmap/ic_expand" />-->
 
         <ImageView
             android:id="@+id/edit_route_point_imageview"
             android:layout_width="@dimen/route_item_icon_size"
             android:layout_height="@dimen/route_item_icon_size"
             android:layout_centerVertical="true"
-            android:layout_toRightOf="@id/move_up_route_point_imageview"
             android:src="@mipmap/ic_edit" />
 
         <ImageView
@@ -48,11 +47,18 @@
 
     </RelativeLayout>
 
+    <ImageView
+        android:layout_centerVertical="true"
+        android:id="@+id/drag_imageview"
+        android:src="@mipmap/ic_drag_vertical"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content" />
+
     <!--ROUTE POINTS TEXTVIEWS-->
     <RelativeLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignParentLeft="true"
+        android:layout_toRightOf="@id/drag_imageview"
         android:layout_toLeftOf="@id/route_points_icons_layout">
 
         <TextView
@@ -68,4 +74,5 @@
             android:layout_height="wrap_content"
             android:layout_below="@id/route_points_name_textview" />
     </RelativeLayout>
+
 </RelativeLayout>

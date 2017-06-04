@@ -29,29 +29,33 @@ public class VNS {
     private static Route route;
     private static AppCompatActivity appCompatActivity;
     private static ArrayMap<String, ArrayMap<String, Travel>> distFromPointMap;
+    private static RoutePointDestination routePointDestinationFromYourLocalization;
+    private static ArrayList<RoutePoint> routePoints;
+    private static boolean isRouteFound;
 
     /**funkcja inicializujaca algorytm VNS.*/
-    private static void initVNS(Route routeArg, AppCompatActivity appCompatActivityArg) {
+    private static void initVNS(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations) {
         route = routeArg;
         appCompatActivity = appCompatActivityArg;
         minDist = 0;
+        isRouteFound = false;
+        routePointDestinationFromYourLocalization = routePointDestinations;
         createDistMatrix();
     }
 
     /**funkcja wyznaczajaca trase algorytmem vns*/
-    public static Route VNS(Route routeArg, AppCompatActivity appCompatActivityArg){
+    public static boolean VNS(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
         long time = System.currentTimeMillis();
-        initVNS(routeArg,appCompatActivityArg);
+        initVNS(routeArg,appCompatActivityArg,routePointDestinations);
         Route route = createInitRoute();
         vns(route.getRoutePoints());
-
         String s = "";
         for (RoutePoint routePoint : route.getRoutePoints()) {
             s += routePoint.getPlaceName().substring(0, 3) + ";";
         }
         Utils.debugLog("kolejnosc punktow : " + s);
         Utils.debugLog("policzona w " + ((System.currentTimeMillis() - time)/1000) + "sek");
-        return route;
+        return isRouteFound;
     }
 
     private static void vns(ArrayList<RoutePoint> routePoints) {
@@ -61,9 +65,12 @@ public class VNS {
             for(int k = 2 ;k < K_MAX; k++){
                 routePoints = shake(routePoints,k);
                 VNSRoute impovedRoute = improvment(new VNSRoute(routePoints));
-                if(impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()){
-                    vnsRoute = impovedRoute;
-                    break;
+                if(impovedRoute.getTravel() != null){
+                    isRouteFound = true;
+                    if(vnsRoute.getTravel() == null || impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()){
+                        vnsRoute = impovedRoute;
+                        break;
+                    }
                 }
             }
         }
@@ -72,11 +79,14 @@ public class VNS {
     }
 
     private static VNSRoute improvment(VNSRoute vnsRoute) {
-        double initDist = vnsRoute.getTravel().getDistance();
+        double initDist = 0;
+        if(vnsRoute.getTravel() != null) {
+            initDist = vnsRoute.getTravel().getDistance();
+        }
         for(int i = 0 ; i < vnsRoute.getRoutePoints().size() -1 ; i++){
             Collections.swap(vnsRoute.getRoutePoints(),i,i+1);
             vnsRoute.calculateDistance();
-            if(vnsRoute.getTravel().getDistance() < initDist){
+            if(vnsRoute.getTravel() != null && (vnsRoute.getTravel().getDistance() < initDist || initDist == 0)){
                 initDist = vnsRoute.getTravel().getDistance();
             } else {
                 Collections.swap(vnsRoute.getRoutePoints(),i+1,i);
@@ -148,12 +158,12 @@ public class VNS {
         return false;
     }
 
-    public static Route optimal(Route routeArg, AppCompatActivity appCompatActivityArg){
-        initVNS(routeArg,appCompatActivityArg);
-        ArrayList<RoutePoint> routePoints = route.getRoutePoints();
-        ilosc = silnia(routePoints.size());
-        getOptimalRoute(routePoints,new ArrayList<RoutePoint>());
-        return route;
+    public static boolean optimal(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
+        initVNS(routeArg,appCompatActivityArg,routePointDestinations);
+        ArrayList<RoutePoint> routePointsList = route.getRoutePoints();
+        ilosc = silnia(routePointsList.size()+1);
+        getOptimalRoute(routePointsList, new ArrayList<RoutePoint>());
+        return isRouteFound;
     }
 
     private static void getOptimalRoute(ArrayList<RoutePoint> routePointsForIterations, ArrayList<RoutePoint> alreadyVisitedRoutePoints ) {
@@ -192,6 +202,7 @@ public class VNS {
         }
         Utils.debugLog("kolejnosc punktow : " + s);
         route.setRoutePoints(foundRoute);
+        isRouteFound = true;
     }
 
     private static void handleProgress() {
@@ -202,7 +213,7 @@ public class VNS {
     }
 
     private static Travel calculateRouteDistance(ArrayList<RoutePoint> foundRoute) {
-        Travel travel = new Travel(0,0,Time.convertTimeToLong(foundRoute.get(0).getStartTime()));
+        Travel travel = new Travel(0,0,0);
         for(int i = -1 ; i < foundRoute.size() - 1 ; i++){
             String fromRoutePointId;
             if(i == -1)
@@ -227,6 +238,7 @@ public class VNS {
             travel.addDistance(travelFromPointToPoint.getDistance());
             travel.addDuration(travelFromPointToPoint.getDuration());
         }
+        travel.setRouteTime(travel.getRouteTime() - Time.convertTimeToLong(foundRoute.get(0).getStartTime()));
         return travel;
     }
 
@@ -266,7 +278,13 @@ public class VNS {
         if(lastRoutePoint != null){
            return distFromPointMap.get(lastRoutePoint).get(rp);
         } else {
-            return new Travel(0,0,""); // fixme odleglosc od miejsca pobytu do danego punktu
+            ArrayList<Travel> travelToPointList = routePointDestinationFromYourLocalization.getTravelToPointList();
+            for(Travel t : travelToPointList){
+                if(t.getDestinationPlaceId().equals(rp)){
+                    return t;
+                }
+            }
+            return null;
         }
     }
 

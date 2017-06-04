@@ -2,9 +2,11 @@ package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
 import android.content.Context;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
@@ -15,6 +17,8 @@ import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDial
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
+import com.example.mateuszskolimowski.inzynierka.utils.Utils;
+import com.example.mateuszskolimowski.inzynierka.views.ItemTouchHelperAdapterInterface;
 
 import java.util.Collections;
 
@@ -23,18 +27,24 @@ import java.util.Collections;
  */
 public class RoutePointsRecyclerViewAdapter
         extends RecyclerView.Adapter<RoutePointsRecyclerViewAdapter.ViewHolder>
-//        implements ItemTouchHelperAdapterInterface
+        implements ItemTouchHelperAdapterInterface
 {
 
     private final Context context;
+    private final OnStartDragListener mDragStartListener;
     private Route route;
     private AppCompatActivity appCompatActivity;
     private View v;
 
-    public RoutePointsRecyclerViewAdapter(Route route, Context context, AppCompatActivity appCompatActivity) {
+    public interface OnStartDragListener {
+        void onStartDrag(RecyclerView.ViewHolder viewHolder);
+    }
+
+    public RoutePointsRecyclerViewAdapter(Route route, Context context, AppCompatActivity appCompatActivity,OnStartDragListener dragStartListener) {
         this.route = route;
         this.context = context;
         this.appCompatActivity = appCompatActivity;
+        mDragStartListener = dragStartListener;
     }
 
     @Override
@@ -45,14 +55,23 @@ public class RoutePointsRecyclerViewAdapter
     }
 
     @Override
-    public void onBindViewHolder(ViewHolder holder, int position) {
+    public void onBindViewHolder(final ViewHolder holder, int position) {
         RoutePoint routePoint = route.getRoutePoints().get(position);
         holder.routePointsNameTextView.setText(routePoint.getPlaceName());
         holder.timeTextView.setText(routePoint.getStartTime().toString() + " - " + routePoint.getEndTime().toString());
         holder.editRoutePointImageView.setOnClickListener(new EditRoutePointClickListener(routePoint));
         holder.deleteRoutePointImageView.setOnClickListener(new DeleteRoutePointClickListener(routePoint));
-        holder.moveDownRoutePointImageView.setOnClickListener(new MoveDownRoutePointClickListener(routePoint));
-        holder.moveUpRoutePointImageView.setOnClickListener(new MoveUpRoutePointClickListener(routePoint));
+//        holder.moveDownRoutePointImageView.setOnClickListener(new MoveDownRoutePointClickListener(routePoint));
+//        holder.moveUpRoutePointImageView.setOnClickListener(new MoveUpRoutePointClickListener(routePoint));
+        holder.dragImageView.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                if (MotionEventCompat.getActionMasked(event) == MotionEvent.ACTION_DOWN) {
+                    mDragStartListener.onStartDrag(holder);
+                }
+                return false;
+            }
+        });
     }
 
     @Override
@@ -60,7 +79,7 @@ public class RoutePointsRecyclerViewAdapter
         return route.getRoutePoints().size();
     }
 
-   /* @Override
+    @Override
     public void onItemMove(int fromPosition, int toPosition) {
         if (fromPosition < toPosition) {
             for (int i = fromPosition; i < toPosition; i++) {
@@ -71,10 +90,13 @@ public class RoutePointsRecyclerViewAdapter
                 Collections.swap(route.getRoutePoints(), i, i - 1);
             }
         }
-        AddRoutePointsActivity.updateRoute(appCompatActivity,route);
         notifyItemMoved(fromPosition, toPosition);
     }
-*/
+
+    @Override
+    public void updateRoute() {
+        AddRoutePointsActivity.updateRoute(appCompatActivity,route);
+    }
 
     public static class ViewHolder extends RecyclerView.ViewHolder {
 
@@ -83,8 +105,9 @@ public class RoutePointsRecyclerViewAdapter
         private final TextView timeTextView;
         private final ImageView deleteRoutePointImageView;
         private final ImageView editRoutePointImageView;
-        private final ImageView moveDownRoutePointImageView;
-        private final ImageView moveUpRoutePointImageView;
+//        private final ImageView moveDownRoutePointImageView;
+//        private final ImageView moveUpRoutePointImageView;
+        private final ImageView dragImageView;
 
         public ViewHolder(View v) {
             super(v);
@@ -93,8 +116,9 @@ public class RoutePointsRecyclerViewAdapter
             timeTextView = (TextView) v.findViewById(R.id.time_textview);
             deleteRoutePointImageView = (ImageView) v.findViewById(R.id.delete_route_point_imageview);
             editRoutePointImageView = (ImageView) v.findViewById(R.id.edit_route_point_imageview);
-            moveDownRoutePointImageView = (ImageView) v.findViewById(R.id.move_down_route_point_imageview);
-            moveUpRoutePointImageView = (ImageView) v.findViewById(R.id.move_up_route_point_imageview);
+//            moveDownRoutePointImageView = (ImageView) v.findViewById(R.id.move_down_route_point_imageview);
+//            moveUpRoutePointImageView = (ImageView) v.findViewById(R.id.move_up_route_point_imageview);
+            dragImageView = (ImageView) v.findViewById(R.id.drag_imageview);
         }
     }
 
@@ -135,7 +159,7 @@ public class RoutePointsRecyclerViewAdapter
         }
     }
 
-    private class MoveDownRoutePointClickListener implements View.OnClickListener {
+    /*private class MoveDownRoutePointClickListener implements View.OnClickListener {
         private final RoutePoint routePoint;
 
         public MoveDownRoutePointClickListener(RoutePoint routePoint) {
@@ -169,5 +193,5 @@ public class RoutePointsRecyclerViewAdapter
                 notifyItemMoved(index, index - 1);
             }
         }
-    }
+    }*/
 }

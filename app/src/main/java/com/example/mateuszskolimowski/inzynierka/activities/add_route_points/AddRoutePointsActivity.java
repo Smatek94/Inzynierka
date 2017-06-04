@@ -6,7 +6,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
-import android.os.Handler;
+import android.os.AsyncTask;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -27,7 +27,6 @@ import android.widget.Toast;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistanceFromYourLocalizationApiFragment;
-import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistancesFromNewRoutePointApiFragment;
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
@@ -40,16 +39,14 @@ import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
-import com.example.mateuszskolimowski.inzynierka.model.Travel;
 import com.example.mateuszskolimowski.inzynierka.utils.PermissionsUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
+import com.example.mateuszskolimowski.inzynierka.views.SimpleItemTouchHelperCallback;
 import com.example.mateuszskolimowski.inzynierka.vns.VNS;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
-
-import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
@@ -59,7 +56,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         GoogleApiClient.OnConnectionFailedListener,
         AskForGPSDialog.AskForGPSDialogInterface,
         GetDistanceFromYourLocalizationApiFragment.FragmentResponseListener,
-        LoadingDialog.fragmentInteractionInterface{
+        LoadingDialog.fragmentInteractionInterface,
+        RoutePointsRecyclerViewAdapter.OnStartDragListener{
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
@@ -209,10 +207,14 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     }
 
     private void getRouteDirectionsFromYourLocalization(Location mLastLocation) {
-        GetDistanceFromYourLocalizationApiFragment getDistanceFromYourLocalizationApiFragment = (GetDistanceFromYourLocalizationApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG);
-        if (getDistanceFromYourLocalizationApiFragment == null) {
-            getDistanceFromYourLocalizationApiFragment = GetDistanceFromYourLocalizationApiFragment.newInstance(mLastLocation, route.getRoutePoints());
-            getSupportFragmentManager().beginTransaction().add(getDistanceFromYourLocalizationApiFragment, GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+        if(Utils.isOnline(this)) {
+            GetDistanceFromYourLocalizationApiFragment getDistanceFromYourLocalizationApiFragment = (GetDistanceFromYourLocalizationApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG);
+            if (getDistanceFromYourLocalizationApiFragment == null) {
+                getDistanceFromYourLocalizationApiFragment = GetDistanceFromYourLocalizationApiFragment.newInstance(mLastLocation, route.getRoutePoints());
+                getSupportFragmentManager().beginTransaction().add(getDistanceFromYourLocalizationApiFragment, GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+            }
+        } else {
+            Utils.debugLog("Brak internetu. Potrzebny jest do pobrania danych o odległości.");
         }
     }
 
@@ -247,12 +249,12 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     private void initRoutePointsRecyclerView() {
         routePointsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this);
+        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this,this);
         routePointsRecyclerView.setAdapter(routePointsRecyclerViewAdapter);
         routePointsRecyclerView.addItemDecoration(new DividerItemDecoration(AddRoutePointsActivity.this, R.drawable.divider));
-//        callback = new SimpleItemTouchHelperCallback(routePointsRecyclerViewAdapter);
-//        touchHelper = new ItemTouchHelper(callback);
-//        touchHelper.attachToRecyclerView(routePointsRecyclerView);
+        callback = new SimpleItemTouchHelperCallback(routePointsRecyclerViewAdapter);
+        touchHelper = new ItemTouchHelper(callback);
+        touchHelper.attachToRecyclerView(routePointsRecyclerView);
         handleRoutesVisibilityLayouts();
     }
 
@@ -394,19 +396,43 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     }
 
     @Override
-    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestinations) {
-        Route x = VNS.optimal(route, this);//fixme dodac async task, dodac uwzglednienie odleglosci z lokalizacji
-        hideLoadingDialog();
-//            Route x2 = VNS.VNS(route,this);
+    public void onDoneGetDestinationRoutePoints(final RoutePointDestination routePointDestinations) {
+        new AsyncTask<Object, Object, Boolean>(){
+
+            @Override
+            protected Boolean doInBackground(Object... voids) {
+//                return VNS.optimal(route, AddRoutePointsActivity.this,routePointDestinations);
+                return VNS.VNS(route,AddRoutePointsActivity.this,routePointDestinations);
+            }
+
+            @Override
+            protected void onPostExecute(Boolean aVoid) {
+                hideLoadingDialog();
+                if(aVoid){
+                    routePointsRecyclerViewAdapter.notifyDataSetChanged();
+                   Toast.makeText(AddRoutePointsActivity.this,"udało się wyznaczyć optymalną trasę.",Toast.LENGTH_SHORT).show();
+                } else {
+                    Toast.makeText(AddRoutePointsActivity.this,"nie udało się wyznaczyć optymalnej trasy.",Toast.LENGTH_SHORT).show();
+                }
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
+//            Route x2 =
     }
 
     @Override
     public void onFailureListener(String msg, int statusCode) {
         hideLoadingDialog();
+        Toast.makeText(this,"nie udało się pobrać danych o odległości z google.",Toast.LENGTH_SHORT).show();
     }
 
     @Override
     public void backPressedWhenDialogWasVisible() {
         finish();
+    }
+
+    @Override
+    public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
+        touchHelper.startDrag(viewHolder);
     }
 }
