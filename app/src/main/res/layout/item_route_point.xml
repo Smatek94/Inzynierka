@@ -45,6 +45,15 @@
             android:layout_toRightOf="@id/edit_route_point_imageview"
             android:src="@mipmap/ic_delete" />
 
+        <ImageView
+            android:id="@+id/navigate_route_point_imageview"
+            android:layout_width="@dimen/route_item_icon_size"
+            android:layout_height="@dimen/route_item_icon_size"
+            android:layout_centerVertical="true"
+            android:layout_toRightOf="@id/delete_route_point_imageview"
+            android:rotation="90"
+            android:src="@mipmap/ic_navigate" />
+
     </RelativeLayout>
 
     <ImageView

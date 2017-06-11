@@ -9,7 +9,9 @@ import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api.GetDistanceFromYourLocalizationApiFragment;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
+import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.google.android.gms.maps.CameraUpdate;
 import com.google.android.gms.maps.CameraUpdateFactory;
@@ -18,12 +20,14 @@ import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
+import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.LatLngBounds;
 import com.google.android.gms.maps.model.MarkerOptions;
+import com.google.android.gms.maps.model.PolylineOptions;
 
 import java.util.ArrayList;
 
-public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
+public class ShowRoutePointsOnMapActivity extends AppCompatActivity implements GetDirectionsApiFragment.FragmentResponseListener{
 
     public static final String ROUTE_ID_EXTRA_TAG = ShowRoutePointsOnMapActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String CAMERA_POSITION_OUT_STATE_TAG = ShowRoutePointsOnMapActivity.class.getName() + "CAMERA_POSITION_OUT_STATE_TAG";
@@ -75,11 +79,26 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
                         } else {
                             animateCamera();
                         }
+                        getDirections();
                     }
                 });
             }
         });
         getSupportFragmentManager().beginTransaction().replace(R.id.map_container, supportMapFragment).commit();
+    }
+
+    private void getDirections() {
+        if(Utils.isOnline(this)) {
+            if(route.getRoutePoints().size() > 1) {
+                GetDirectionsApiFragment getDirectionsApiFragment = (GetDirectionsApiFragment) getSupportFragmentManager().findFragmentByTag(GetDirectionsApiFragment.FRAGMENT_TAG);
+                if (getDirectionsApiFragment == null) {
+                    getDirectionsApiFragment = GetDirectionsApiFragment.newInstance(route);
+                    getSupportFragmentManager().beginTransaction().add(getDirectionsApiFragment, GetDirectionsApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+                }
+            }
+        } else {
+            Utils.debugLog("Brak internetu. Potrzebny jest do pobrania danych o odległości.");
+        }
     }
 
     private void moveCamera(CameraPosition cameraPosition) {
@@ -130,6 +149,19 @@ public class ShowRoutePointsOnMapActivity extends AppCompatActivity {
 
         return new MarkerOptions()
                 .icon(BitmapDescriptorFactory.fromBitmap(bmp));
+
+    }
+
+    @Override
+    public void onDoneGetLatLngsListRoutePoints(ArrayList<LatLng> latlngsList) {
+        Utils.debugLog("test");
+        PolylineOptions options = new PolylineOptions().width(5).color(Color.BLUE);
+        options.addAll(latlngsList);
+        map.addPolyline(options);
+    }
+
+    @Override
+    public void onFailureListener(String msg, int statusCode) {
 
     }
 }

@@ -1,6 +1,8 @@
 package com.example.mateuszskolimowski.inzynierka.activities.add_route_points;
 
 import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.view.MotionEventCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -13,6 +15,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
+import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
@@ -61,6 +64,7 @@ public class RoutePointsRecyclerViewAdapter
         holder.timeTextView.setText(routePoint.getStartTime().toString() + " - " + routePoint.getEndTime().toString());
         holder.editRoutePointImageView.setOnClickListener(new EditRoutePointClickListener(routePoint));
         holder.deleteRoutePointImageView.setOnClickListener(new DeleteRoutePointClickListener(routePoint));
+        holder.navigateRoutePointImageView.setOnClickListener(new NavigateRoutePointClickListener(routePoint));
 //        holder.moveDownRoutePointImageView.setOnClickListener(new MoveDownRoutePointClickListener(routePoint));
 //        holder.moveUpRoutePointImageView.setOnClickListener(new MoveUpRoutePointClickListener(routePoint));
         holder.dragImageView.setOnTouchListener(new View.OnTouchListener() {
@@ -108,6 +112,7 @@ public class RoutePointsRecyclerViewAdapter
 //        private final ImageView moveDownRoutePointImageView;
 //        private final ImageView moveUpRoutePointImageView;
         private final ImageView dragImageView;
+        private final ImageView navigateRoutePointImageView;
 
         public ViewHolder(View v) {
             super(v);
@@ -116,9 +121,29 @@ public class RoutePointsRecyclerViewAdapter
             timeTextView = (TextView) v.findViewById(R.id.time_textview);
             deleteRoutePointImageView = (ImageView) v.findViewById(R.id.delete_route_point_imageview);
             editRoutePointImageView = (ImageView) v.findViewById(R.id.edit_route_point_imageview);
+            navigateRoutePointImageView = (ImageView) v.findViewById(R.id.navigate_route_point_imageview);
 //            moveDownRoutePointImageView = (ImageView) v.findViewById(R.id.move_down_route_point_imageview);
 //            moveUpRoutePointImageView = (ImageView) v.findViewById(R.id.move_up_route_point_imageview);
             dragImageView = (ImageView) v.findViewById(R.id.drag_imageview);
+        }
+    }
+
+    private class NavigateRoutePointClickListener implements View.OnClickListener {
+
+        private final RoutePoint routePoint;
+
+        public NavigateRoutePointClickListener(RoutePoint routePoint) {
+            this.routePoint = routePoint;
+        }
+
+        @Override
+        public void onClick(View view) {
+            Uri gmmIntentUri = Uri.parse("google.navigation:q="+routePoint.getLatLng().latitude+","+routePoint.getLatLng().longitude);
+            Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+            mapIntent.setPackage("com.google.android.apps.maps");
+            appCompatActivity.startActivityForResult(mapIntent, NavigateActivity.GOOGLE_NAVIGATION_INTENT_REQUEST_CODE);
+//            checkRoutePoint(true,routePoint,holder.routePointVisitedCheckBox);
+//            navigationCallback.navigationLaunched(routePoint);
         }
     }
 

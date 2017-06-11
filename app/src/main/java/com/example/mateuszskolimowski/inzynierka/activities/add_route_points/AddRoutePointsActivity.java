@@ -61,7 +61,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         AskForGPSDialog.AskForGPSDialogInterface,
         GetDistanceFromYourLocalizationApiFragment.FragmentResponseListener,
         LoadingDialog.fragmentInteractionInterface,
-        RoutePointsRecyclerViewAdapter.OnStartDragListener{
+        RoutePointsRecyclerViewAdapter.OnStartDragListener {
 
     public static final String ROUTE_EXTRA_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
     public static final String ROUTE_RESULT_TAG = AddRoutePointsActivity.class.getName() + "ROUTE_RESULT_TAG";
@@ -155,18 +155,12 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 actionOptimize();
                 break;
             }
-            case R.id.action_navigate: {
-                Intent intent = new Intent(AddRoutePointsActivity.this, NavigateActivity.class);
-                intent.putExtra(NavigateActivity.ROUTE_ID_EXTRA_TAG, route.getId());
-                startActivity(intent);
-                break;
-            }
         }
         return super.onOptionsItemSelected(item);
     }
 
     private void actionOptimize() {
-        Utils.showLoadingDialog("optymalizacja trasy...",this);
+        Utils.showLoadingDialog("optymalizacja trasy...", this);
         if (VNS.checkIfRouteIsFeasible(route)) {
             if (PermissionsUtils.requestPermission(this, this, permissions, GET_LOCATION_PERMISSION_REQUEST_CODE)) {
                 permissionAcceptedOptimzeRoute();
@@ -212,7 +206,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     }
 
     private void getRouteDirectionsFromYourLocalization(Location mLastLocation) {
-        if(Utils.isOnline(this)) {
+        if (Utils.isOnline(this)) {
             GetDistanceFromYourLocalizationApiFragment getDistanceFromYourLocalizationApiFragment = (GetDistanceFromYourLocalizationApiFragment) getSupportFragmentManager().findFragmentByTag(GetDistanceFromYourLocalizationApiFragment.FRAGMENT_TAG);
             if (getDistanceFromYourLocalizationApiFragment == null) {
                 getDistanceFromYourLocalizationApiFragment = GetDistanceFromYourLocalizationApiFragment.newInstance(mLastLocation, route.getRoutePoints());
@@ -254,7 +248,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     private void initRoutePointsRecyclerView() {
         routePointsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this,this);
+        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this, this);
         routePointsRecyclerView.setAdapter(routePointsRecyclerViewAdapter);
         routePointsRecyclerView.addItemDecoration(new DividerItemDecoration(AddRoutePointsActivity.this, R.drawable.divider));
         callback = new SimpleItemTouchHelperCallback(routePointsRecyclerViewAdapter);
@@ -395,7 +389,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
         FragmentManager fragmentManager = getSupportFragmentManager();
         fragmentManager.executePendingTransactions();
         LoadingDialog customDialog = (LoadingDialog) fragmentManager.findFragmentByTag(LoadingDialog.TAG);
-        if(customDialog != null){
+        if (customDialog != null) {
             customDialog.dismissAllowingStateLoss();
         }
     }
@@ -414,8 +408,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
             protected void onPostExecute(String aVoid) {
                 hideLoadingDialog();
                 if (aVoid != null) {
-                    if(aVoid.equals("found")) {
-                        updateRoute(AddRoutePointsActivity.this,route);
+                    if (aVoid.equals("found")) {
+                        updateRoute(AddRoutePointsActivity.this, route);
                         routePointsRecyclerViewAdapter.notifyDataSetChanged();
                         Toast.makeText(AddRoutePointsActivity.this, "udało się wyznaczyć optymalną trasę.", Toast.LENGTH_SHORT).show();
                     } else {
@@ -429,8 +423,8 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
             }
 
             private String getRouteWithoutDirectionsName(String aVoid) {
-                for(RoutePoint routePoint : route.getRoutePoints()){
-                    if(routePoint.getId().equals(aVoid))
+                for (RoutePoint routePoint : route.getRoutePoints()) {
+                    if (routePoint.getId().equals(aVoid))
                         return routePoint.getPlaceName();
                 }
                 return "";
@@ -443,7 +437,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     public void onFailureListener(String msg, int statusCode) {
         hideLoadingDialog();
-        Toast.makeText(this,"nie udało się pobrać danych o odległości z google.",Toast.LENGTH_SHORT).show();
+        Toast.makeText(this, "nie udało się pobrać danych o odległości z google.", Toast.LENGTH_SHORT).show();
     }
 
     @Override

@@ -13,12 +13,5 @@
             android:icon="@mipmap/ic_optimize"
             android:title="optimize"
             app:showAsAction="always" />
-
-        <item
-            android:id="@+id/action_navigate"
-            android:rotation="90"
-            android:icon="@mipmap/ic_navigate_white"
-            android:title="navigate"
-            app:showAsAction="always" />
     </group>
 </menu>
