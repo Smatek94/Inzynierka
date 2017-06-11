@@ -7,6 +7,7 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
+import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -47,6 +48,9 @@ import com.example.mateuszskolimowski.inzynierka.vns.VNS;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
+import com.google.android.gms.maps.model.LatLng;
+
+import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
@@ -76,6 +80,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private Location mLastLocation;
     private boolean gpsIntentWasLaunched;
     private boolean permissionAcceptedOptimizeRoute;
+    private AsyncTask<Object, Object, String> asyncTask;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -397,26 +402,41 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     @Override
     public void onDoneGetDestinationRoutePoints(final RoutePointDestination routePointDestinations) {
-        new AsyncTask<Object, Object, Boolean>(){
+        asyncTask = new AsyncTask<Object, Object, String>() {
 
             @Override
-            protected Boolean doInBackground(Object... voids) {
+            protected String doInBackground(Object... voids) {
 //                return VNS.optimal(route, AddRoutePointsActivity.this,routePointDestinations);
-                return VNS.VNS(route,AddRoutePointsActivity.this,routePointDestinations);
+                return VNS.VNS(route, AddRoutePointsActivity.this, routePointDestinations);
             }
 
             @Override
-            protected void onPostExecute(Boolean aVoid) {
+            protected void onPostExecute(String aVoid) {
                 hideLoadingDialog();
-                if(aVoid){
-                    routePointsRecyclerViewAdapter.notifyDataSetChanged();
-                   Toast.makeText(AddRoutePointsActivity.this,"udało się wyznaczyć optymalną trasę.",Toast.LENGTH_SHORT).show();
+                if (aVoid != null) {
+                    if(aVoid.equals("found")) {
+                        updateRoute(AddRoutePointsActivity.this,route);
+                        routePointsRecyclerViewAdapter.notifyDataSetChanged();
+                        Toast.makeText(AddRoutePointsActivity.this, "udało się wyznaczyć optymalną trasę.", Toast.LENGTH_SHORT).show();
+                    } else {
+                        String routeWithoutDirectionsName = getRouteWithoutDirectionsName(aVoid);
+                        Toast.makeText(AddRoutePointsActivity.this, "nie udało się wyznaczyć optymalne trasy. punkt " + routeWithoutDirectionsName + " nie ma danych o czasie i odległości podróży do pozostałych. Usuń go i dodaj ponownie.", Toast.LENGTH_LONG).show();
+                    }
                 } else {
-                    Toast.makeText(AddRoutePointsActivity.this,"nie udało się wyznaczyć optymalnej trasy.",Toast.LENGTH_SHORT).show();
+                    Toast.makeText(AddRoutePointsActivity.this, "nie udało się wyznaczyć optymalnej trasy.", Toast.LENGTH_SHORT).show();
                 }
                 super.onPostExecute(aVoid);
             }
-        }.execute();
+
+            private String getRouteWithoutDirectionsName(String aVoid) {
+                for(RoutePoint routePoint : route.getRoutePoints()){
+                    if(routePoint.getId().equals(aVoid))
+                        return routePoint.getPlaceName();
+                }
+                return "";
+            }
+        };
+        asyncTask.execute();
 //            Route x2 =
     }
 
@@ -428,6 +448,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     @Override
     public void backPressedWhenDialogWasVisible() {
+        asyncTask.cancel(true);
         finish();
     }
 

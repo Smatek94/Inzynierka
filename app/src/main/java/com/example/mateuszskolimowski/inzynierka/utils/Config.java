@@ -5,4 +5,5 @@ package com.example.mateuszskolimowski.inzynierka.utils;
  */
 public class Config {
     public static boolean isDebug = true;
+    public static boolean useInternet = false;
 }

@@ -37,14 +37,14 @@ public class Utils {
     }
 
     public static boolean isOnline(Context context) {
-//        if(Config.useInternet) {
+        if(Config.useInternet) {
             ConnectivityManager cm =
                     (ConnectivityManager) context.getSystemService(Context.CONNECTIVITY_SERVICE);
             NetworkInfo netInfo = cm.getActiveNetworkInfo();
             return netInfo != null && netInfo.isConnectedOrConnecting();
-//        } else {
-//            return true;
-//        }
+        } else {
+            return true;
+        }
     }
 
     public static void showSnackbar(View view, String msg) {

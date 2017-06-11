@@ -352,16 +352,26 @@ public class AddNewRoutePointActivity extends AppCompatActivity
 
     @Override
     public void onDoneGetDestinationRoutePoints(final RoutePointDestination routePointDestination, final int actionType) {
-        Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
-        Utils.getSQLiteHelper(this).updateRoutePointsDestination(routePointDestination);
-        Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
-        if(toFinished){
-            toFinished = false;
-            fromFinished = false;
-            handleActionType(actionType);
-        } else {
-            fromFinished = true;
-        }
+        new AsyncTask<Void,Void,Void>(){
+
+            @Override
+            protected Void doInBackground(Void... voids) {
+                Utils.getSQLiteHelper(AddNewRoutePointActivity.this).updateRoutePointsDestination(routePointDestination);
+                return null;
+            }
+
+            @Override
+            protected void onPostExecute(Void aVoid) {
+                if(toFinished){
+                    toFinished = false;
+                    fromFinished = false;
+                    handleActionType(actionType);
+                } else {
+                    fromFinished = true;
+                }
+                super.onPostExecute(aVoid);
+            }
+        }.execute();
     }
 
     @Override

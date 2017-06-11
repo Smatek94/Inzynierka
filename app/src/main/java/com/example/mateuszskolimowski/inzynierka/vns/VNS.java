@@ -31,22 +31,45 @@ public class VNS {
     private static ArrayMap<String, ArrayMap<String, Travel>> distFromPointMap;
     private static RoutePointDestination routePointDestinationFromYourLocalization;
     private static ArrayList<RoutePoint> routePoints;
-    private static boolean isRouteFound;
+    private static String isRouteFound;
 
     /**funkcja inicializujaca algorytm VNS.*/
     private static void initVNS(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations) {
         route = routeArg;
         appCompatActivity = appCompatActivityArg;
         minDist = 0;
-        isRouteFound = false;
+        isRouteFound = null;
         routePointDestinationFromYourLocalization = routePointDestinations;
         createDistMatrix();
     }
 
+    private static String checkIfDistMatrixIsComplete() {
+        routePoints = route.getRoutePoints();
+        for(int i = 0 ; i < routePoints.size() ; i++){
+            ArrayMap<String, Travel> stringTravelArrayMap = distFromPointMap.get(routePoints.get(i).getId());
+            if(stringTravelArrayMap != null) {
+                for (int j = 0; j < routePoints.size(); j++) {
+                    if (i != j) {
+                        if (stringTravelArrayMap.get(routePoints.get(j).getId()) == null){
+                            return routePoints.get(j).getId();
+                        }
+                    }
+                }
+            } else {
+                return routePoints.get(i).getId();
+            }
+        }
+        return null;
+    }
+
     /**funkcja wyznaczajaca trase algorytmem vns*/
-    public static boolean VNS(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
+    public static String VNS(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
         long time = System.currentTimeMillis();
         initVNS(routeArg,appCompatActivityArg,routePointDestinations);
+        String routePointIdWithoutDirections = checkIfDistMatrixIsComplete();
+        if(routePointIdWithoutDirections != null){
+            return routePointIdWithoutDirections;
+        }
         Route route = createInitRoute();
         vns(route.getRoutePoints());
         String s = "";
@@ -66,7 +89,7 @@ public class VNS {
                 routePoints = shake(routePoints,k);
                 VNSRoute impovedRoute = improvment(new VNSRoute(routePoints));
                 if(impovedRoute.getTravel() != null){
-                    isRouteFound = true;
+                    isRouteFound = "found";
                     if(vnsRoute.getTravel() == null || impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()){
                         vnsRoute = impovedRoute;
                         break;
@@ -158,7 +181,7 @@ public class VNS {
         return false;
     }
 
-    public static boolean optimal(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
+    public static String optimal(Route routeArg, AppCompatActivity appCompatActivityArg, RoutePointDestination routePointDestinations){
         initVNS(routeArg,appCompatActivityArg,routePointDestinations);
         ArrayList<RoutePoint> routePointsList = route.getRoutePoints();
         ilosc = silnia(routePointsList.size()+1);
@@ -202,7 +225,7 @@ public class VNS {
         }
         Utils.debugLog("kolejnosc punktow : " + s);
         route.setRoutePoints(foundRoute);
-        isRouteFound = true;
+        isRouteFound = "found";
     }
 
     private static void handleProgress() {
