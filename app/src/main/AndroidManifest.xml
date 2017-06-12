@@ -31,7 +31,8 @@
         <activity android:name=".activities.add_route_points.AddRoutePointsActivity" />
         <activity android:name=".activities.add_route_points.AddNewRoutePointActivity" />
         <activity android:name=".activities.navigation.NavigateActivity" />
-        <activity android:name=".activities.show_on_map.ShowRoutePointsOnMapActivity"></activity>
+        <activity android:name=".activities.show_on_map.ShowRoutePointsOnMapActivity" />
+        <activity android:name=".activities.routes_list.SettingsActivity"></activity>
     </application>
 
 </manifest>

@@ -24,7 +24,7 @@ import java.util.ArrayList;
 public class NavigateActivity extends AppCompatActivity {
 
     public static final String ROUTE_ID_EXTRA_TAG = NavigateActivity.class.getName() + "ROUTE_ID_EXTRA_TAG";
-    public static final int GOOGLE_NAVIGATION_INTENT_REQUEST_CODE = 0;
+    public static final int GOOGLE_NAVIGATION_INTENT_REQUEST_CODE = 8;
     private RecyclerView routePointsNavigationRecyclerView;
     private RoutePointsNavigationRecyclerViewAdapter routePointsNavigationRecyclerViewAdapter;
     private MenuInflater inflater;

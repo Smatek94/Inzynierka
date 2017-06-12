@@ -1,5 +1,6 @@
 package com.example.mateuszskolimowski.inzynierka.dialog_fragments;
 
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.provider.CalendarContract;
@@ -34,6 +35,7 @@ public class AddToCalendarDialog extends DialogFragment {
     private CheckBox showCalendarCheckBox;
     private TextView okTextView;
     private TextView noTextView;
+    private AddToCalendarInterface addToCalendarInterface;
 
     public static AddToCalendarDialog newInstance(RoutePoint actualRoutePointDestinationNavigated) {
         AddToCalendarDialog fragment = new AddToCalendarDialog();
@@ -69,6 +71,7 @@ public class AddToCalendarDialog extends DialogFragment {
                 intent.putExtra(CalendarContract.Events.ALL_DAY, false);// periodicity
                 intent.putExtra(CalendarContract.Events.DESCRIPTION,descriptionEditText.getText().toString());
                 startActivity(intent);
+//                addToCalendarInterface.addToCalendar();
                 dismiss();
             }
         });
@@ -107,5 +110,17 @@ public class AddToCalendarDialog extends DialogFragment {
         showCalendarCheckBox = (CheckBox) v.findViewById(R.id.show_calendar_dialog_checkbox);
         okTextView = (TextView) v.findViewById(R.id.ok_textview);
         noTextView = (TextView) v.findViewById(R.id.no_textview);
+    }
+
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
+        if (context instanceof AddToCalendarInterface) {
+            addToCalendarInterface = (AddToCalendarInterface) context;
+        }
+    }
+
+    public interface AddToCalendarInterface{
+        void addToCalendar();
     }
 }

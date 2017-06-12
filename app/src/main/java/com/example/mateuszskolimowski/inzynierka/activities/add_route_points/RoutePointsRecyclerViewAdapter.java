@@ -35,6 +35,7 @@ public class RoutePointsRecyclerViewAdapter
 
     private final Context context;
     private final OnStartDragListener mDragStartListener;
+    private final AddRoutePointsActivity.NavigationCallback navigationCallback;
     private Route route;
     private AppCompatActivity appCompatActivity;
     private View v;
@@ -43,11 +44,12 @@ public class RoutePointsRecyclerViewAdapter
         void onStartDrag(RecyclerView.ViewHolder viewHolder);
     }
 
-    public RoutePointsRecyclerViewAdapter(Route route, Context context, AppCompatActivity appCompatActivity,OnStartDragListener dragStartListener) {
+    public RoutePointsRecyclerViewAdapter(Route route, Context context, AppCompatActivity appCompatActivity, OnStartDragListener dragStartListener, AddRoutePointsActivity.NavigationCallback navigationCallback) {
         this.route = route;
         this.context = context;
         this.appCompatActivity = appCompatActivity;
         mDragStartListener = dragStartListener;
+        this.navigationCallback = navigationCallback;
     }
 
     @Override
@@ -138,12 +140,13 @@ public class RoutePointsRecyclerViewAdapter
 
         @Override
         public void onClick(View view) {
+            navigationCallback.navigationLaunched(routePoint);
             Uri gmmIntentUri = Uri.parse("google.navigation:q="+routePoint.getLatLng().latitude+","+routePoint.getLatLng().longitude);
             Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
             mapIntent.setPackage("com.google.android.apps.maps");
             appCompatActivity.startActivityForResult(mapIntent, NavigateActivity.GOOGLE_NAVIGATION_INTENT_REQUEST_CODE);
 //            checkRoutePoint(true,routePoint,holder.routePointVisitedCheckBox);
-//            navigationCallback.navigationLaunched(routePoint);
+            navigationCallback.navigationLaunched(routePoint);
         }
     }
 

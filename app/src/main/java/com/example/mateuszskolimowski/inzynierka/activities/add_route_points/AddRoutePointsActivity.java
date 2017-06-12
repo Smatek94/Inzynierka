@@ -7,7 +7,6 @@ import android.content.pm.PackageManager;
 import android.location.Location;
 import android.location.LocationManager;
 import android.os.AsyncTask;
-import android.os.Parcelable;
 import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -31,6 +30,7 @@ import com.example.mateuszskolimowski.inzynierka.activities.add_route_points.api
 import com.example.mateuszskolimowski.inzynierka.activities.navigation.NavigateActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.routes_list.AddOrUpdateNewRouteActivity;
 import com.example.mateuszskolimowski.inzynierka.activities.show_on_map.ShowRoutePointsOnMapActivity;
+import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AddToCalendarDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AreYouSureDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.AskForGPSDialog;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.EditRoutePointTimeDialog;
@@ -41,6 +41,7 @@ import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.utils.PermissionsUtils;
+import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 import com.example.mateuszskolimowski.inzynierka.views.SimpleItemTouchHelperCallback;
@@ -48,9 +49,6 @@ import com.example.mateuszskolimowski.inzynierka.vns.VNS;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
-import com.google.android.gms.maps.model.LatLng;
-
-import java.util.ArrayList;
 
 public class AddRoutePointsActivity extends AppCompatActivity implements
         AreYouSureDialog.DeleteRoutePointInterface,
@@ -81,6 +79,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private boolean gpsIntentWasLaunched;
     private boolean permissionAcceptedOptimizeRoute;
     private AsyncTask<Object, Object, String> asyncTask;
+    private RoutePoint navigatedRoutePoint;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -248,7 +247,12 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     private void initRoutePointsRecyclerView() {
         routePointsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this, this);
+        routePointsRecyclerViewAdapter = new RoutePointsRecyclerViewAdapter(route, this, this, this, new NavigationCallback() {
+            @Override
+            public void navigationLaunched(RoutePoint routePoint) {
+                navigatedRoutePoint = routePoint;
+            }
+        });
         routePointsRecyclerView.setAdapter(routePointsRecyclerViewAdapter);
         routePointsRecyclerView.addItemDecoration(new DividerItemDecoration(AddRoutePointsActivity.this, R.drawable.divider));
         callback = new SimpleItemTouchHelperCallback(routePointsRecyclerViewAdapter);
@@ -282,6 +286,24 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                 }
             }
         }
+        if(requestCode == NavigateActivity.GOOGLE_NAVIGATION_INTENT_REQUEST_CODE){
+            showAddToCalendarDialog();
+        }
+    }
+
+    private void showAddToCalendarDialog() {
+        if (shouldDialogBeShown()) {
+            FragmentManager fragmentManager = getSupportFragmentManager();
+            AddToCalendarDialog addToCalendarDialog = (AddToCalendarDialog) fragmentManager.findFragmentByTag(AddToCalendarDialog.TAG);
+            if (addToCalendarDialog == null) {
+                addToCalendarDialog = AddToCalendarDialog.newInstance(navigatedRoutePoint);
+                addToCalendarDialog.show(fragmentManager.beginTransaction(), AddToCalendarDialog.TAG);
+            }
+        }
+    }
+
+    private boolean shouldDialogBeShown() {
+        return SharedPreferencesUtils.shouldCalendarDialogBeShown(getApplicationContext());
     }
 
     public static void updateRoute(AppCompatActivity appCompatActivity, Route route) {
@@ -434,6 +456,11 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 //            Route x2 =
     }
 
+//    @Override
+//    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestinations) {
+//
+//    }
+
     @Override
     public void onFailureListener(String msg, int statusCode) {
         hideLoadingDialog();
@@ -449,5 +476,22 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     @Override
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         touchHelper.startDrag(viewHolder);
+    }
+
+    /*@Override
+    public void addToCalendar() {
+        if (Utils.isOnline(this)) {
+            AddToCalendarApiFragment addToCalendarApiFragment = (AddToCalendarApiFragment) getSupportFragmentManager().findFragmentByTag(AddToCalendarApiFragment.FRAGMENT_TAG);
+            if (addToCalendarApiFragment == null) {
+                addToCalendarApiFragment = AddToCalendarApiFragment.newInstance(mLastLocation, route.getRoutePoints());
+                getSupportFragmentManager().beginTransaction().add(addToCalendarApiFragment, AddToCalendarApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
+            }
+        } else {
+            Utils.debugLog("Brak internetu. Potrzebny jest aby dodać wydarzenie w kalendarzu.");
+        }
+    }*/
+
+    public interface NavigationCallback {
+        public void navigationLaunched(RoutePoint routePoint);
     }
 }
