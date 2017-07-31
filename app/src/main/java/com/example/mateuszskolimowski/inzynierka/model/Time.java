@@ -8,7 +8,7 @@ import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 /**
  * Created by Mateusz Skolimowski on 30.03.2017.
  */
-public class Time implements Parcelable{
+public class Time implements Parcelable {
     private int hour;
     private int minute;
 
@@ -24,7 +24,7 @@ public class Time implements Parcelable{
     @Override
     public boolean equals(Object obj) {
         Time comparedTime = (Time) obj;
-        if(comparedTime.getHour() == this.getHour() && comparedTime.getMinute() == this.getMinute())
+        if (comparedTime.getHour() == this.getHour() && comparedTime.getMinute() == this.getMinute())
             return true;
         else
             return false;
@@ -67,19 +67,30 @@ public class Time implements Parcelable{
         parcel.writeInt(hour);
         parcel.writeInt(minute);
     }
-    /** funkcja porownuje dwa czasy. jezeli pierwszy jest "wiekszy" to zwraca true, jezeli drugi to false*/
+
+    /**
+     * funkcja porownuje dwa czasy. jezeli pierwszy jest "wiekszy" to zwraca true, jezeli drugi to false
+     */
     public static boolean compareTimes(Time firstTime, Time secondTime) {
-        if(firstTime.getHour() > secondTime.getHour()){
+        int fh = firstTime.getHour();
+        int sh = secondTime.getHour();
+        if (firstTime.getHour() > secondTime.getHour()) {
             return true;
-        } else if(firstTime.getHour() == secondTime.getHour()){
-            if(firstTime.getMinute() > secondTime.getMinute()){
+        } else if (firstTime.getHour() == secondTime.getHour()) {
+            int fmin = firstTime.getMinute();
+            int smim = secondTime.getMinute();
+            if (firstTime.getMinute() > secondTime.getMinute()) {
                 return true;
             }
         }
         return false;
     }
 
-    public static long convertTimeToLong(Time startTime) {
-        return (startTime.getHour()*60 + startTime.getMinute())*60*1000;
+    public static long convertTimeToLong(Time startTime, boolean isTest) {
+        if (isTest) {
+            return startTime.getHour();
+        } else {
+            return (startTime.getHour() * 60 + startTime.getMinute()) * 60 * 1000;
+        }
     }
 }

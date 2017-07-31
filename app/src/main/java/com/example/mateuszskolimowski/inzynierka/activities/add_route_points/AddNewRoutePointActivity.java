@@ -169,11 +169,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
             if(Utils.getSQLiteHelper(this).getRoutePointDestinationFromDataBase(selectedPlaceId) == null){
                 addRoutePointDestinationToDataBase(selectedPlaceId);
             }
-            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
             addRoutePointToRoute();
-            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
             getRoutePointDestinationsFromApi(selectedPlaceId,actionType);
-            Utils.debugLog("minelo : " + (System.currentTimeMillis() - time));
         } else {
             Toast.makeText(this,"brak internetu",Toast.LENGTH_SHORT).show();
         }
@@ -182,8 +179,10 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private Route addRoutePointToRoute() {
         route.addRoutePointId(new RoutePoint(
                 selectedPlaceId,
-                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
-                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)),
+//                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
+                new Time(8,0),//fixme tylko na testy
+//                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)),
+                new Time(20,0),//fixem tylko na testy
                 selectedPlaceLatLng,
                 selectedPlaceName,
                 System.currentTimeMillis(),
@@ -311,6 +310,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
                 buttonEnabled = false;
             }
         }
+        enableAddRouteButton();//fixme usunac, tylko na testy
     }
 
     private void disableAddRouteButton() {

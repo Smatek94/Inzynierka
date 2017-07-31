@@ -12,6 +12,7 @@ import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.app.FragmentManager;
+import android.support.v4.util.ArrayMap;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
@@ -40,12 +41,14 @@ import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Route;
+import com.example.mateuszskolimowski.inzynierka.model.Travel;
 import com.example.mateuszskolimowski.inzynierka.utils.PermissionsUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 import com.example.mateuszskolimowski.inzynierka.views.SimpleItemTouchHelperCallback;
 import com.example.mateuszskolimowski.inzynierka.vns.VNS;
+import com.example.mateuszskolimowski.inzynierka.vns.VNS_ORIG;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -422,8 +425,17 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
             @Override
             protected String doInBackground(Object... voids) {
-//                return VNS.optimal(route, AddRoutePointsActivity.this,routePointDestinations);
-                return VNS.VNS(route, AddRoutePointsActivity.this, routePointDestinations);
+//                return VNS_ORIG.optimal(route, AddRoutePointsActivity.this,routePointDestinations);
+                ArrayMap<String, ArrayMap<String, Travel>> distMatrix = new ArrayMap<>();
+                for(RoutePoint routePoint : route.getRoutePoints()){
+                    ArrayMap<String, Travel> distMap = new ArrayMap<>();
+                    RoutePointDestination routePointDestinationFromDataBase = Utils.getSQLiteHelper(AddRoutePointsActivity.this).getRoutePointDestinationFromDataBase(routePoint.getId());
+                    for(Travel travel : routePointDestinationFromDataBase.getTravelToPointList()){
+                        distMap.put(travel.getDestinationPlaceId(),travel);
+                    }
+                    distMatrix.put(routePoint.getId(),distMap);
+                }
+                return VNS.VNS(route, routePointDestinations,distMatrix);
             }
 
             @Override
@@ -453,13 +465,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
             }
         };
         asyncTask.execute();
-//            Route x2 =
     }
-
-//    @Override
-//    public void onDoneGetDestinationRoutePoints(RoutePointDestination routePointDestinations) {
-//
-//    }
 
     @Override
     public void onFailureListener(String msg, int statusCode) {
