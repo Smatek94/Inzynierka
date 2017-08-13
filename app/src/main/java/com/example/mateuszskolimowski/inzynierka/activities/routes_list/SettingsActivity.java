@@ -2,6 +2,7 @@ package com.example.mateuszskolimowski.inzynierka.activities.routes_list;
 
 import android.content.Intent;
 import android.os.AsyncTask;
+import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.v4.app.FragmentManager;
 import android.support.v7.app.AppCompatActivity;
@@ -10,6 +11,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
+import android.widget.SeekBar;
+import android.widget.TextView;
 
 import com.example.mateuszskolimowski.inzynierka.R;
 import com.example.mateuszskolimowski.inzynierka.dialog_fragments.LoadingDialog;
@@ -30,6 +33,8 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
     private boolean fillChoosed;
     private String filePath;
     private AsyncTask<Void, Void, Void> optimizingRouteFromFileAsyncTask;
+    private SeekBar seekBar;
+    private TextView seekBarValueTextView;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,6 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
         setContentView(R.layout.activity_settings);
         findLayoutComponents();
         setUpGUI();
-//        getfile();
     }
 
     @Override
@@ -50,7 +54,7 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
             optimizingRouteFromFileAsyncTask = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    Tests.test(new File(filePath));
+                    Tests.test(new File(filePath),SettingsActivity.this);
                     return null;
                 }
 
@@ -67,11 +71,33 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
     private void findLayoutComponents() {
         addEventToCalendarCheckBox = (CheckBox) findViewById(R.id.add_event_to_calendar_checkbox);
         testButton = (Button) findViewById(R.id.testing_button);
+        seekBar = (SeekBar)findViewById(R.id.seekBar);
+        seekBarValueTextView = (TextView) findViewById(R.id.seek_bar_value_textview);
     }
 
     private void setUpGUI() {
         initCheckBox();
         initTestButton();
+        initSeekBar();
+    }
+
+    private void initSeekBar() {
+        seekBar.setMax(9);
+        seekBar.setOnSeekBarChangeListener(new SeekBar.OnSeekBarChangeListener(){
+            @Override
+            public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+                Utils.debugLog(String.valueOf(progress));
+                seekBarValueTextView.setText(String.valueOf(progress + 1) + "sec");
+                SharedPreferencesUtils.setAlgorithmWorkingTime(SettingsActivity.this,progress);
+            }
+
+            @Override
+            public void onStartTrackingTouch(SeekBar seekBar) {}
+
+            @Override
+            public void onStopTrackingTouch(SeekBar seekBar) {}
+        });
+        seekBar.setProgress(SharedPreferencesUtils.getAlgorithmWorkingTime(this));
     }
 
     private void initTestButton() {

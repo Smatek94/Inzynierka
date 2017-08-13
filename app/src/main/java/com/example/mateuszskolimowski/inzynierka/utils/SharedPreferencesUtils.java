@@ -8,6 +8,7 @@ import com.google.gson.Gson;
 public class SharedPreferencesUtils {
 
     public static final String CALENDAR_DIALOG_TAG = SharedPreferencesUtils.class.getName() + "CALENDAR_DIALOG_TAG";
+    public static final String ALGORITH_WORKING_TIME_TAG = SharedPreferencesUtils.class.getName() + "ALGORITH_WORKING_TIME_TAG";
     public static String PREFERENCES_KEY = "pref_key";
 
     public static String getStringFromSharedPreferences(Context context, String tag) {
@@ -41,16 +42,26 @@ public class SharedPreferencesUtils {
     }
 
     public static boolean getBooleanFromSharedPreferences(Context context, String tag) {
-        Utils.debugLog("pobieram boolean o tagu : " + tag + " z shared preferences");
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
         return sharedPreferences.getBoolean(tag, true);
     }
 
     public static void setBooleanToSharedPreferences(Context context, String tag, boolean booleanToPut) {
-        Utils.debugLog("wrzucam boolean : " + booleanToPut + " o tagu : " + tag + " z shared preferences");
         SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
         SharedPreferences.Editor editor = sharedPreferences.edit();
         editor.putBoolean(tag, booleanToPut);
+        editor.commit();
+    }
+
+    public static int getIntFromSharedPreferences(Context context, String tag) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        return sharedPreferences.getInt(tag, 1);
+    }
+
+    public static void setIntToSharedPreferences(Context context, String tag, int intToPut) {
+        SharedPreferences sharedPreferences = context.getSharedPreferences(PREFERENCES_KEY, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        editor.putInt(tag, intToPut);
         editor.commit();
     }
 
@@ -60,5 +71,13 @@ public class SharedPreferencesUtils {
 
     public static void setShouldCalendarDialogBeShown(Context context, boolean shouldCalendarDialogBeShown){
         setBooleanToSharedPreferences(context,CALENDAR_DIALOG_TAG,shouldCalendarDialogBeShown);
+    }
+
+    public static int getAlgorithmWorkingTime(Context context) {
+        return getIntFromSharedPreferences(context,ALGORITH_WORKING_TIME_TAG);
+    }
+
+    public static void setAlgorithmWorkingTime(Context context, int intToPut) {
+        setIntToSharedPreferences(context,ALGORITH_WORKING_TIME_TAG, intToPut);
     }
 }

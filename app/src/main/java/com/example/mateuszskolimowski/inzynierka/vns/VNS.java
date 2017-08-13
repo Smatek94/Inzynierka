@@ -1,22 +1,19 @@
 package com.example.mateuszskolimowski.inzynierka.vns;
 
+import android.content.Context;
 import android.support.v4.util.ArrayMap;
-import android.support.v7.app.AppCompatActivity;
 
 import com.example.mateuszskolimowski.inzynierka.model.Route;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePoint;
 import com.example.mateuszskolimowski.inzynierka.model.RoutePointDestination;
 import com.example.mateuszskolimowski.inzynierka.model.Time;
 import com.example.mateuszskolimowski.inzynierka.model.Travel;
+import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
-import com.google.android.gms.analytics.HitBuilders;
 
-import java.text.DecimalFormat;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 
 /**
  * Created by Mateusz Skolimowski on 23.07.2017.
@@ -24,15 +21,17 @@ import java.util.Set;
 
 public class VNS {
     private static final int NUMBER_OF_TRIES = 100;
+    private static int ALGORITHM_WORKING_TIME;
     private static ArrayMap<String, ArrayMap<String, Travel>> distanceMatrix;
     private static RoutePointDestination routePointDestinationFromYourLocalization;
     private static String isRouteFound;
-    private static boolean test;
+    private static boolean isTest;
 
     public static String VNS(Route routeArg,
                              RoutePointDestination routePointDestinations,
-                             ArrayMap<String, ArrayMap<String, Travel>> distMatrix, boolean isTest) {
-        test = isTest;
+                             ArrayMap<String, ArrayMap<String, Travel>> distMatrix, boolean isTest,Context context) {
+        VNS.isTest = isTest;
+        ALGORITHM_WORKING_TIME = SharedPreferencesUtils.getAlgorithmWorkingTime(context) * 1000;
         return VNS(routeArg, routePointDestinations, distMatrix);
     }
 
@@ -41,38 +40,22 @@ public class VNS {
                              ArrayMap<String, ArrayMap<String, Travel>> distMatrix) {
         distanceMatrix = distMatrix;
         routePointDestinationFromYourLocalization = routePointDestinations;
-        ArrayList<RoutePoint> routePoints = routeArg.getRoutePoints();
-        for (int i = 0; i < routePoints.size(); i++) {
-            for (int j = 0; j < routePoints.size() - i - 1; j++) {
-                if (Time.compareTimes(routePoints.get(j).getEndTime(), routePoints.get(j + 1).getEndTime())) {
-                    Collections.swap(routePoints, j, j + 1);
-                }
-            }
-        }
-
-      /*  swap(routePoints,0,"36.0");
-        swap(routePoints,1,"14.0");
-        swap(routePoints,2,"12.0");
-        swap(routePoints,3,"9.0");
-        swap(routePoints,4,"19.0");
-        swap(routePoints,5,"43.0");
-        swap(routePoints,6,"52.0");
-        swap(routePoints,7,"27.0");
-        swap(routePoints,8,"51.0");
-        swap(routePoints,9,"13.0");
-        swap(routePoints,10,"11.0");
-        Travel travel = calculateRouteDistance(routePoints);*/
-        VNSRoute vnsRoute = new VNSRoute(routePoints);
-        for (int i = 0; i < NUMBER_OF_TRIES; i++) {
-            if (i % 100 == 0) {
-                Utils.debugLog("i = " + i);
-            }
+        ArrayList<RoutePoint> routePoints = createStartRoute(routeArg.getRoutePoints());
+        VNSRoute vnsRoute = new VNSRoute(routePoints, routeArg.getStartTime(), routeArg.getEndTime());
+        long time = System.currentTimeMillis();
+        while (System.currentTimeMillis() - time < ALGORITHM_WORKING_TIME) {
             for (int k = 1; k < routePoints.size(); k++) {
                 ArrayList<RoutePoint> tempRoutePoints = shake(routePoints, k);
-                VNSRoute impovedRoute = improvment(new VNSRoute(tempRoutePoints));
+                VNSRoute impovedRoute = improvment(new VNSRoute(tempRoutePoints, routeArg.getStartTime(), routeArg.getEndTime()));
                 if (impovedRoute.getTravel() != null) {
                     isRouteFound = "found";
-                    if (vnsRoute.getTravel() == null || impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()) {
+                    if (vnsRoute.getTravel() == null || impovedRoute.getTravel().getFailTime() == 0) {
+                        if (impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()) {
+                            vnsRoute = impovedRoute;
+                            routePoints = tempRoutePoints;
+                            break;
+                        }
+                    } else if (impovedRoute.getTravel().getFailTime() < vnsRoute.getTravel().getFailTime()) {
                         vnsRoute = impovedRoute;
                         routePoints = tempRoutePoints;
                         break;
@@ -82,6 +65,7 @@ public class VNS {
         }
         if (vnsRoute.getTravel() != null) {
             Utils.debugLog("dist  = " + vnsRoute.getTravel().getDistance());
+            Utils.debugLog("failTime  = " + vnsRoute.getTravel().getFailTime());
             String s = "";
             for (RoutePoint routePoint : vnsRoute.getRoutePoints()) {
                 s += routePoint.getId().substring(0, routePoint.getId().length() - 2) + ";";
@@ -92,13 +76,18 @@ public class VNS {
         return isRouteFound;
     }
 
-    private static void swap(ArrayList<RoutePoint> routePoints, int index, String s) {
-        for (int i = index; i < routePoints.size(); i++) {
-            if (routePoints.get(i).getId().equals(s)) {
-                Collections.swap(routePoints, index, i);
-                break;
+    /**
+     * order routepoints based on end time
+     */
+    private static ArrayList<RoutePoint> createStartRoute(ArrayList<RoutePoint> routePoints) {
+        for (int i = 0; i < routePoints.size(); i++) {
+            for (int j = 0; j < routePoints.size() - i - 1; j++) {
+                if (Time.compareTimes(routePoints.get(j).getEndTime(), routePoints.get(j + 1).getEndTime())) {
+                    Collections.swap(routePoints, j, j + 1);
+                }
             }
         }
+        return routePoints;
     }
 
     private static VNSRoute improvment(VNSRoute vnsRoute) {
@@ -120,12 +109,16 @@ public class VNS {
     }
 
     private static class VNSRoute {
+        private final Time startTime;
+        private final Time endTime;
         private ArrayList<RoutePoint> routePoints;
         private Travel travel;
 
-        public VNSRoute(ArrayList<RoutePoint> routePoints) {
+        public VNSRoute(ArrayList<RoutePoint> routePoints, Time startTime, Time endTime) {
             this.routePoints = new ArrayList<>(routePoints);
-            this.travel = calculateRouteDistance(routePoints);
+            this.startTime = startTime;
+            this.endTime = endTime;
+            calculateDistance();
         }
 
         public void setRoutePoints(ArrayList<RoutePoint> routePoints) {
@@ -145,27 +138,83 @@ public class VNS {
         }
 
         public Travel calculateDistance() {
-            this.travel = calculateRouteDistance(routePoints);
+            if(!isTest) {
+                calculateDistanceForDifferentTimeWindows();
+            } else {
+                travel = calculateRouteDistance(routePoints,0);
+            }
             return travel;
+        }
+
+        private void calculateDistanceForDifferentTimeWindows() {
+            calculateBestHour();
+            calculateBestMinute();
+        }
+
+        private void calculateBestMinute() {
+            Travel improvedTravel;
+            long minute = 60*1000;
+            for (long routeStartingMinute = travel.getRouteStartTime() - (45*minute); routeStartingMinute < travel.getRouteStartTime() + (45*minute); routeStartingMinute += (15*minute)) {
+                improvedTravel = calculateRouteDistance(routePoints, routeStartingMinute);
+                if (travel == null) {
+                    travel = improvedTravel;
+                } else if (improvedTravel.getFailTime() == 0) {
+                    if (travel.getFailTime() != 0) {
+                        travel = improvedTravel;
+                    } else if (improvedTravel.getRouteTime() - improvedTravel.getRouteStartTime() < travel.getRouteTime() - travel.getRouteStartTime()) {
+                        travel = improvedTravel;
+                    }
+                } else if (improvedTravel.getFailTime() < travel.getFailTime()) {
+                    travel = improvedTravel;
+                } else if (improvedTravel.getFailTime() == travel.getFailTime()) {
+                    if (improvedTravel.getRouteTime() - improvedTravel.getRouteStartTime() < travel.getRouteTime() - travel.getRouteStartTime()) {
+                        travel = improvedTravel;
+                    }
+                }
+            }
+        }
+
+        private void calculateBestHour() {
+            Travel improvedTravel;
+            for (int routeStartingHour = startTime.getHour(); routeStartingHour < endTime.getHour(); routeStartingHour++) {
+                improvedTravel = calculateRouteDistance(routePoints, routeStartingHour * 60 * 60 * 1000);
+                if (travel == null) {
+                    travel = improvedTravel;
+                } else if (improvedTravel.getFailTime() == 0) {
+                    if (travel.getFailTime() != 0) {
+                        travel = improvedTravel;
+                    } else if (improvedTravel.getRouteTime() - improvedTravel.getRouteStartTime() < travel.getRouteTime() - travel.getRouteStartTime()) {
+                        travel = improvedTravel;
+                    }
+                } else if (improvedTravel.getFailTime() < travel.getFailTime()) {
+                    travel = improvedTravel;
+                } else if (improvedTravel.getFailTime() == travel.getFailTime()) {
+                    if (improvedTravel.getRouteTime() - improvedTravel.getRouteStartTime() < travel.getRouteTime() - travel.getRouteStartTime()) {
+                        travel = improvedTravel;
+                    }
+                }
+            }
         }
     }
 
-    public static Travel getTravelFromPointToPoint(String lastRoutePoint, String rp) {
+    public static Travel getTravelFromPointToPoint(String lastRoutePoint, String rp, long actualTime,boolean isTest) {
+        Travel result = null;
         if (lastRoutePoint != null) {
-            return distanceMatrix.get(lastRoutePoint).get(rp);
+            result = new Travel(distanceMatrix.get(lastRoutePoint).get(rp),actualTime,isTest);
         } else {
             ArrayList<Travel> travelToPointList = routePointDestinationFromYourLocalization.getTravelToPointList();
             for (Travel t : travelToPointList) {
                 if (t.getDestinationPlaceId().equals(rp)) {
-                    return t;
+                    result = new Travel(t,actualTime,isTest);
                 }
             }
-            return null;
         }
+        return result;
     }
 
-    public static Travel calculateRouteDistance(ArrayList<RoutePoint> foundRoute) {
-        Travel travel = new Travel(0, 0, 0);
+    public static Travel calculateRouteDistance(ArrayList<RoutePoint> foundRoute, long routeStartingHour) {
+        Travel travel = new Travel(0, 0, routeStartingHour, 0);
+        travel.setRouteStartTime(routeStartingHour);
         for (int i = -1; i < foundRoute.size() - 1; i++) {
             String fromRoutePointId;
             if (i == -1)
@@ -173,28 +222,28 @@ public class VNS {
             else
                 fromRoutePointId = foundRoute.get(i).getId();
             RoutePoint toRoutePouint = foundRoute.get(i + 1);
-            Travel travelFromPointToPoint = getTravelFromPointToPoint(fromRoutePointId, toRoutePouint.getId());
-            long endTime = Time.convertTimeToLong(toRoutePouint.getEndTime(), test);
+            Travel travelFromPointToPoint = getTravelFromPointToPoint(fromRoutePointId, toRoutePouint.getId(),travel.getRouteTime(),isTest);
+            long endTime = Time.convertTimeToLong(toRoutePouint.getEndTime(), isTest);
             long routeTimeAndDuration = travel.getRouteTime() + travelFromPointToPoint.getDuration();
             if (endTime < routeTimeAndDuration) {
-                return null;
-            } else {
-                long startTime = Time.convertTimeToLong(toRoutePouint.getStartTime(), test);
-                if (startTime >= routeTimeAndDuration) {
-                    travel.setRouteTime(Time.convertTimeToLong(toRoutePouint.getStartTime(), test));
-                } else {
-                    travel.setRouteTime(travel.getRouteTime() + travelFromPointToPoint.getDuration());
-                }
+                travel.addFailTime(routeTimeAndDuration - endTime);
             }
+            long startTime = Time.convertTimeToLong(toRoutePouint.getStartTime(), isTest);
+            if (startTime >= routeTimeAndDuration) {
+                travel.setRouteTime(Time.convertTimeToLong(toRoutePouint.getStartTime(), isTest));
+            } else {
+                travel.setRouteTime(travel.getRouteTime() + travelFromPointToPoint.getDuration());
+            }
+
             travel.addDistance(travelFromPointToPoint.getDistance());
             travel.addDuration(travelFromPointToPoint.getDuration());
         }
-        if (test) {
-            Travel travelBackToDepo = getTravelFromPointToPoint(foundRoute.get(foundRoute.size() - 1).getId(), "1.0");
+        if (isTest) {
+            Travel travelBackToDepo = getTravelFromPointToPoint(foundRoute.get(foundRoute.size() - 1).getId(), "1.0",travel.getRouteTime(),isTest);
             travel.addDistance(travelBackToDepo.getDistance());
             travel.addDuration(travelBackToDepo.getDuration());
         }
-        travel.setRouteTime(travel.getRouteTime() - Time.convertTimeToLong(foundRoute.get(0).getStartTime(), test));
+        travel.setRouteTime(travel.getRouteTime() - Time.convertTimeToLong(foundRoute.get(0).getStartTime(), isTest));
         return travel;
     }
 

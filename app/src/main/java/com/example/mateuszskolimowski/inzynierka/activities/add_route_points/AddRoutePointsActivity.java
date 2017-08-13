@@ -48,7 +48,6 @@ import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 import com.example.mateuszskolimowski.inzynierka.views.DividerItemDecoration;
 import com.example.mateuszskolimowski.inzynierka.views.SimpleItemTouchHelperCallback;
 import com.example.mateuszskolimowski.inzynierka.vns.VNS;
-import com.example.mateuszskolimowski.inzynierka.vns.VNS_ORIG;
 import com.google.android.gms.common.ConnectionResult;
 import com.google.android.gms.common.api.GoogleApiClient;
 import com.google.android.gms.location.LocationServices;
@@ -435,7 +434,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
                     }
                     distMatrix.put(routePoint.getId(),distMap);
                 }
-                return VNS.VNS(route, routePointDestinations,distMatrix);
+                return VNS.VNS(route, routePointDestinations,distMatrix,false,AddRoutePointsActivity.this);
             }
 
             @Override

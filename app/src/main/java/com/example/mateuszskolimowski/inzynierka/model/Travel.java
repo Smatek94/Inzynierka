@@ -8,13 +8,22 @@ import android.os.Parcelable;
  * 1. jako odleglosc miedzy punktem a jego destinationPlaceId
  * 2. jako suma czasow i odleglosci calej trasy
  */
-public class Travel implements Parcelable{
+public class Travel implements Parcelable {
 
-    /**czas w ktorym znajduje sie trasa po odwiedzeniu danej ilosci punktow*/
-    private  long routeTime;
+    private static final long HALF_DAY = 12 * 60 * 60 * 1000;
+    private static final long FOUR_AM = 4 * 60 * 60 * 1000;
+    private static final long TWELVE_AM = 12 * 60 * 60 * 1000;
+    private static final long TWO_PM = 14 * 60 * 60 * 1000;
+    private static final long TEN_PM = 22 * 60 * 60 * 1000;
+    /**
+     * czas w ktorym znajduje sie trasa po odwiedzeniu danej ilosci punktow
+     */
+    private long routeTime;
     private long duration;
     private double distance;
     private String destinationPlaceId;
+    private long failTime;
+    private long routeStartTime;
 
     public Travel(long duration, double distance, String destinationPlaceId) {
         this.duration = duration;
@@ -22,10 +31,11 @@ public class Travel implements Parcelable{
         this.destinationPlaceId = destinationPlaceId;
     }
 
-    public Travel(long duration, double distance, long routeTime) {
+    public Travel(long duration, double distance, long routeTime, long failTime) {
         this.duration = duration;
         this.distance = distance;
         this.routeTime = routeTime;
+        this.failTime = failTime;
     }
 
     public long getDuration() {
@@ -44,10 +54,39 @@ public class Travel implements Parcelable{
         return routeTime;
     }
 
+    public Travel(Travel travel, long actualTime, boolean isTest) {
+        if (!isTest)
+            this.duration = (long) (travel.getDuration() * getMultiplier(actualTime));
+        else
+            this.duration = travel.getDuration();
+        this.distance = travel.getDistance();
+        this.destinationPlaceId = travel.getDestinationPlaceId();
+    }
+
+    private double getMultiplier(long actualTime) {
+        if (actualTime <= FOUR_AM || (actualTime >= TWELVE_AM && actualTime <= TWO_PM) || actualTime >= TEN_PM) {
+            return 1;
+        } else if (actualTime <= HALF_DAY) {
+            double d = 0.5 * Math.sin(0.125 * (actualTime / 1000 / 60 / 60 - 4) * Math.PI);
+            return 1 + d;
+        } else {
+            double d = 0.5 * Math.sin(0.125 * (actualTime / 1000 / 60 / 60 - 14) * Math.PI);
+            return 1 + d;
+        }
+    }
+
     protected Travel(Parcel in) {
         duration = in.readLong();
         distance = in.readDouble();
         destinationPlaceId = in.readString();
+    }
+
+    public void setRouteStartTime(long routeStartTime) {
+        this.routeStartTime = routeStartTime;
+    }
+
+    public long getRouteStartTime() {
+        return routeStartTime;
     }
 
     @Override
@@ -84,5 +123,13 @@ public class Travel implements Parcelable{
 
     public void setRouteTime(long routeTime) {
         this.routeTime = routeTime;
+    }
+
+    public void addFailTime(long failTime) {
+        this.failTime += failTime;
+    }
+
+    public long getFailTime() {
+        return failTime;
     }
 }

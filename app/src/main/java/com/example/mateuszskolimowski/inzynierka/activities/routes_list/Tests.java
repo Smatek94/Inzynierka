@@ -1,5 +1,6 @@
 package com.example.mateuszskolimowski.inzynierka.activities.routes_list;
 
+import android.content.Context;
 import android.content.Intent;
 import android.support.v4.util.ArrayMap;
 
@@ -24,11 +25,11 @@ import java.util.ArrayList;
 
 public class Tests {
 
-    public static void test(File file) {
-        getDataFromFile(file);
+    public static void test(File file,Context context) {
+        getDataFromFile(file,context);
     }
 
-    private static void getDataFromFile(File file) {
+    private static void getDataFromFile(File file, Context context) {
         try {
             BufferedReader br = new BufferedReader(new FileReader(file));
             br.readLine();
@@ -48,7 +49,7 @@ public class Tests {
                     new Time(0,0),
                     routePoints,
                     0);
-            VNS.VNS(route,createFromDepot(fileLinesList),createDistMatrix(fileLinesList),true);
+            VNS.VNS(route,createFromDepot(fileLinesList),createDistMatrix(fileLinesList),true,context);
         } catch (IOException e) {
             //You'll need to add proper error handling here
         }
