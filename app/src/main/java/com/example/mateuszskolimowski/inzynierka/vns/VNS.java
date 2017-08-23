@@ -41,6 +41,12 @@ public class VNS {
         distanceMatrix = distMatrix;
         routePointDestinationFromYourLocalization = routePointDestinations;
         ArrayList<RoutePoint> routePoints = createStartRoute(routeArg.getRoutePoints());
+        //fixme usunac test
+        Travel travel = calculateRouteDistance(routePoints, 0);
+        Collections.swap(routePoints,1,2);
+        Collections.swap(routePoints,3,4);
+        Travel travel2 = calculateRouteDistance(routePoints, 0);
+        //fixme usunac test
         VNSRoute vnsRoute = new VNSRoute(routePoints, routeArg.getStartTime(), routeArg.getEndTime());
         long time = System.currentTimeMillis();
         while (System.currentTimeMillis() - time < ALGORITHM_WORKING_TIME) {
@@ -48,23 +54,26 @@ public class VNS {
                 ArrayList<RoutePoint> tempRoutePoints = shake(routePoints, k);
                 VNSRoute impovedRoute = improvment(new VNSRoute(tempRoutePoints, routeArg.getStartTime(), routeArg.getEndTime()));
                 if (impovedRoute.getTravel() != null) {
-                    isRouteFound = "found";
-                    if (vnsRoute.getTravel() == null || impovedRoute.getTravel().getFailTime() == 0) {
-                        if (impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()) {
+                    if(Time.convertTimeToLong(routeArg.getEndTime(),isTest) > impovedRoute.getTravel().getRouteTime()) {
+                        isRouteFound = "found";
+                        if (vnsRoute.getTravel() == null || impovedRoute.getTravel().getFailTime() == 0) {
+                            if (impovedRoute.getTravel().getDistance() < vnsRoute.getTravel().getDistance()) {
+                                vnsRoute = impovedRoute;
+                                routePoints = tempRoutePoints;
+                                break;
+                            }
+                        } else if (impovedRoute.getTravel().getFailTime() < vnsRoute.getTravel().getFailTime()) {
                             vnsRoute = impovedRoute;
                             routePoints = tempRoutePoints;
                             break;
                         }
-                    } else if (impovedRoute.getTravel().getFailTime() < vnsRoute.getTravel().getFailTime()) {
-                        vnsRoute = impovedRoute;
-                        routePoints = tempRoutePoints;
-                        break;
                     }
                 }
             }
         }
         if (vnsRoute.getTravel() != null) {
             Utils.debugLog("dist  = " + vnsRoute.getTravel().getDistance());
+            Utils.debugLog("duration  = " + vnsRoute.getTravel().getDuration());
             Utils.debugLog("failTime  = " + vnsRoute.getTravel().getFailTime());
             String s = "";
             for (RoutePoint routePoint : vnsRoute.getRoutePoints()) {

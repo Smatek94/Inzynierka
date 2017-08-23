@@ -264,7 +264,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     }
 
     private void initPlaceAutocompleteFragment() {
-        autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().findFragmentById(R.id.place_autocomplete_fragment);
+        autocompleteFragment = (PlaceAutocompleteFragment) getFragmentManager().
+                findFragmentById(R.id.place_autocomplete_fragment);
         autocompleteFragment.setOnPlaceSelectedListener(new PlaceSelectionListener() {
             @Override
             public void onPlaceSelected(Place place) {

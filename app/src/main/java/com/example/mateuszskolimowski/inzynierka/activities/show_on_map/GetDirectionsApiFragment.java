@@ -86,12 +86,6 @@ public class GetDirectionsApiFragment extends RequestFragment {
         JSONArray steps = leg.getJSONArray("steps");
         for(int i = 0 ; i < steps.length() ; i++){
             JSONObject step = steps.getJSONObject(i);
-            /*if(i == 0){
-                JSONObject startLocation = step.getJSONObject("start_location");
-                resultList.add(new LatLng(startLocation.getDouble("lat"),startLocation.getDouble("lng")));
-            }
-            JSONObject endLocation = step.getJSONObject("end_location");
-            resultList.add(new LatLng(endLocation.getDouble("lat"),endLocation.getDouble("lng")));*/
             resultList.addAll(PolyUtil.decode(step.getJSONObject("polyline").getString("points")));
         }
         return resultList;
