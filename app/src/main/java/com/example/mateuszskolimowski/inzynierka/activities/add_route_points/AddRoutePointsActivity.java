@@ -80,7 +80,7 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     private Location mLastLocation;
     private boolean gpsIntentWasLaunched;
     private boolean permissionAcceptedOptimizeRoute;
-    private AsyncTask<Object, Object, String> asyncTask;
+    private AsyncTask<Object, Object, VNS.VNSRoute> asyncTask;
     private RoutePoint navigatedRoutePoint;
 
     @Override
@@ -420,10 +420,10 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
 
     @Override
     public void onDoneGetDestinationRoutePoints(final RoutePointDestination routePointDestinations) {
-        asyncTask = new AsyncTask<Object, Object, String>() {
+        asyncTask = new AsyncTask<Object, Object, VNS.VNSRoute>() {
 
             @Override
-            protected String doInBackground(Object... voids) {
+            protected VNS.VNSRoute doInBackground(Object... voids) {
 //                return VNS_ORIG.optimal(route, AddRoutePointsActivity.this,routePointDestinations);
                 ArrayMap<String, ArrayMap<String, Travel>> distMatrix = new ArrayMap<>();
                 for(RoutePoint routePoint : route.getRoutePoints()){
@@ -438,21 +438,33 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
             }
 
             @Override
-            protected void onPostExecute(String aVoid) {
+            protected void onPostExecute(VNS.VNSRoute aVoid) {
                 hideLoadingDialog();
                 if (aVoid != null) {
-                    if (aVoid.equals("found")) {
+//                    if (aVoid.equals("found")) {
                         updateRoute(AddRoutePointsActivity.this, route);
                         routePointsRecyclerViewAdapter.notifyDataSetChanged();
-                        Toast.makeText(AddRoutePointsActivity.this, "udało się wyznaczyć optymalną trasę.", Toast.LENGTH_SHORT).show();
-                    } else {
-                        String routeWithoutDirectionsName = getRouteWithoutDirectionsName(aVoid);
-                        Toast.makeText(AddRoutePointsActivity.this, "nie udało się wyznaczyć optymalne trasy. punkt " + routeWithoutDirectionsName + " nie ma danych o czasie i odległości podróży do pozostałych. Usuń go i dodaj ponownie.", Toast.LENGTH_LONG).show();
-                    }
+                        Toast.makeText(AddRoutePointsActivity.this, "udało się wyznaczyć optymalną trasę. Najlepiej wyruszyć o godzinie : " + getTime(aVoid.getTravel().getRouteStartTime()), Toast.LENGTH_SHORT).show();
+//                    } else {
+//                        String routeWithoutDirectionsName = getRouteWithoutDirectionsName(aVoid);
+//                        Toast.makeText(AddRoutePointsActivity.this, "nie udało się wyznaczyć optymalne trasy. punkt " + routeWithoutDirectionsName + " nie ma danych o czasie i odległości podróży do pozostałych. Usuń go i dodaj ponownie.", Toast.LENGTH_LONG).show();
+//                    }
                 } else {
                     Toast.makeText(AddRoutePointsActivity.this, "nie udało się wyznaczyć optymalnej trasy.", Toast.LENGTH_SHORT).show();
                 }
                 super.onPostExecute(aVoid);
+            }
+
+            private String getTime(long routeStartTime) {
+                int hour = (int) (routeStartTime / 1000 / 60 / 60);
+                int minutes = ((int) (routeStartTime / 1000 / 60)) - (hour * 60);
+                String result = hour + ":";
+                if(minutes < 10){
+                    result += "0"+minutes;
+                } else {
+                    result += minutes;
+                }
+                return result;
             }
 
             private String getRouteWithoutDirectionsName(String aVoid) {
@@ -482,19 +494,6 @@ public class AddRoutePointsActivity extends AppCompatActivity implements
     public void onStartDrag(RecyclerView.ViewHolder viewHolder) {
         touchHelper.startDrag(viewHolder);
     }
-
-    /*@Override
-    public void addToCalendar() {
-        if (Utils.isOnline(this)) {
-            AddToCalendarApiFragment addToCalendarApiFragment = (AddToCalendarApiFragment) getSupportFragmentManager().findFragmentByTag(AddToCalendarApiFragment.FRAGMENT_TAG);
-            if (addToCalendarApiFragment == null) {
-                addToCalendarApiFragment = AddToCalendarApiFragment.newInstance(mLastLocation, route.getRoutePoints());
-                getSupportFragmentManager().beginTransaction().add(addToCalendarApiFragment, AddToCalendarApiFragment.FRAGMENT_TAG).commitAllowingStateLoss();
-            }
-        } else {
-            Utils.debugLog("Brak internetu. Potrzebny jest aby dodać wydarzenie w kalendarzu.");
-        }
-    }*/
 
     public interface NavigationCallback {
         public void navigationLaunched(RoutePoint routePoint);

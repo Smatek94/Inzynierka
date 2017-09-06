@@ -33,7 +33,6 @@ import java.util.ArrayList;
 
 public class AddNewRoutePointActivity extends AppCompatActivity
         implements TimePickerFragment.FragmentResponseListener,
-        LatelyAddedRoutePointsDialog.LatelyAddedRoutePointsDialogInterface,
         GetDistancesFromNewRoutePointApiFragment.FragmentResponseListener,
         GetDistancesToNewRoutePointApiFragment.FragmentResponseListener,
         LoadingDialog.fragmentInteractionInterface{
@@ -116,32 +115,14 @@ public class AddNewRoutePointActivity extends AppCompatActivity
             @Override
             public void onClick(View view) {
                 updateRoute(CLEAR_DATA);
-//                clearData();
             }
         });
         availableAddAndFinishButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 updateRoute(FINISH_ACTIVITY_WITH_RESULT);
-//                finishActivityWithResult();
             }
         });
-        /*chooseFromLastPickedLocationsButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                ArrayList<RoutePointDestination> latelyAddedRoutePoints = Utils.getSQLiteHelper(AddNewRoutePointActivity.this).getLatelyAddedRoutePoints();
-                if(latelyAddedRoutePoints.size() == 0){
-                    Utils.showMsgDialog(AddNewRoutePointActivity.this,getString(R.string.no_route_points_lately_added));
-                } else {
-                    FragmentManager fragmentManager = getSupportFragmentManager();
-                    LatelyAddedRoutePointsDialog latelyAddedRoutePointsDialog = (LatelyAddedRoutePointsDialog) fragmentManager.findFragmentByTag(LatelyAddedRoutePointsDialog.TAG);
-                    if (latelyAddedRoutePointsDialog == null) {
-                        latelyAddedRoutePointsDialog = LatelyAddedRoutePointsDialog.newInstance(latelyAddedRoutePoints);
-                        latelyAddedRoutePointsDialog.show(fragmentManager.beginTransaction(), LatelyAddedRoutePointsDialog.TAG);
-                    }
-                }
-            }
-        });*/
     }
 
     private void clearData() {
@@ -179,10 +160,8 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     private Route addRoutePointToRoute() {
         route.addRoutePointId(new RoutePoint(
                 selectedPlaceId,
-//                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
-                new Time(8,0),//fixme tylko na testy
-//                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)),
-                new Time(20,0),//fixem tylko na testy
+                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(startTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(startTimeTextView)),
+                new Time(AddOrUpdateNewRouteActivity.getHourFromTimeTextView(endTimeTextView),AddOrUpdateNewRouteActivity.getMinuteFromTimeTextView(endTimeTextView)),
                 selectedPlaceLatLng,
                 selectedPlaceName,
                 System.currentTimeMillis(),
@@ -311,7 +290,7 @@ public class AddNewRoutePointActivity extends AppCompatActivity
                 buttonEnabled = false;
             }
         }
-        enableAddRouteButton();//fixme usunac, tylko na testy
+        enableAddRouteButton();
     }
 
     private void disableAddRouteButton() {
@@ -335,20 +314,6 @@ public class AddNewRoutePointActivity extends AppCompatActivity
     @Override
     public void onBackPressed() {
         finishActivityWithResult();
-    }
-
-    @Override
-    public void latelyAddedRoutePointDialogCallback(RoutePointDestination routePointDestination) {
-       /* FragmentManager fragmentManager = getSupportFragmentManager();
-        LatelyAddedRoutePointsDialog latelyAddedRoutePointsDialog = (LatelyAddedRoutePointsDialog) fragmentManager.findFragmentByTag(LatelyAddedRoutePointsDialog.TAG);
-        if (latelyAddedRoutePointsDialog != null) {
-            latelyAddedRoutePointsDialog.dismiss();
-        }
-        selectedPlaceLatLng = routePointDestination.getRoutePointLatLng();
-        selectedPlaceId = routePointDestination.getRoutePointPlaceId();
-        selectedPlaceName = routePointDestination.getRoutePointName() + "";
-        autocompleteFragment.setText(selectedPlaceName);
-        checkIfAllInfoAvailable(); fixme*/
     }
 
     @Override

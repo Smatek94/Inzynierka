@@ -21,6 +21,7 @@ import com.example.mateuszskolimowski.inzynierka.utils.SharedPreferencesUtils;
 import com.example.mateuszskolimowski.inzynierka.utils.Utils;
 
 import java.io.File;
+import java.io.IOException;
 
 public class SettingsActivity extends AppCompatActivity implements LoadingDialog.fragmentInteractionInterface{
 
@@ -54,7 +55,11 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
             optimizingRouteFromFileAsyncTask = new AsyncTask<Void, Void, Void>() {
                 @Override
                 protected Void doInBackground(Void... voids) {
-                    Tests.test(new File(filePath),SettingsActivity.this);
+                    try {
+                        Tests.test(new File(filePath),SettingsActivity.this,1);
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
                     return null;
                 }
 
@@ -149,7 +154,7 @@ public class SettingsActivity extends AppCompatActivity implements LoadingDialog
         if (requestCode == REQUEST_PATH) {
             if (resultCode == RESULT_OK) {
                 fillChoosed = true;
-                filePath = data.getStringExtra("GetPath") + "/" + data.getStringExtra("GetFileName");
+                filePath = data.getStringExtra("GetPath") ;
             }
         }
     }

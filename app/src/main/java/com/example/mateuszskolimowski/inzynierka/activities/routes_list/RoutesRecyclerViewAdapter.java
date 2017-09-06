@@ -200,8 +200,6 @@ public class RoutesRecyclerViewAdapter
 
         @Override
         public void onClick(View view) {
-//            this.routePoints = routesList.get(position).getRoutePoints();
-//            if(routePoints.size() != 0) {
             if(routesList.get(position).getRoutePoints().size() != 0) {
                 handleAnimation();
             } else {

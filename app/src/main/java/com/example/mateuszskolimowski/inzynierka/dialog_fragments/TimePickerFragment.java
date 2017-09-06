@@ -53,8 +53,6 @@ public class TimePickerFragment extends DialogFragment implements TimePickerDial
             timerMinute = calendar.get(Calendar.MINUTE);
         }
         TimePickerDialog tpd = new TimePickerDialog(getActivity(), AlertDialog.THEME_HOLO_DARK,this,timerHour ,timerMinute , DateFormat.is24HourFormat(getActivity()));
-//        TimePickerDialog tpd = new TimePickerDialog(getActivity(), android.R.style.Theme_Material_Dialog_Alert ,this, hour, minute, DateFormat.is24HourFormat(getActivity()));
-//        TimePickerDialog tpd = new TimePickerDialog(getActivity(), android.R.style.Theme_Holo_Dialog ,this, hour, minute, DateFormat.is24HourFormat(getActivity()));
         return tpd;
     }
 

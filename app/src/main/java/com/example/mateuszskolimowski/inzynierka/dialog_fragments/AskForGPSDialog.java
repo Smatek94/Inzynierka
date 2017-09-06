@@ -25,9 +25,6 @@ public class AskForGPSDialog extends DialogFragment {
 
     public static AskForGPSDialog newInstance() {
         AskForGPSDialog fragment = new AskForGPSDialog();
-//        Bundle bundle = new Bundle();
-//        bundle.putString(DIALOG_MSG_ARG_TAG,msg);
-//        fragment.setArguments(bundle);
         return fragment;
     }
 

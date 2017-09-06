@@ -25,14 +25,6 @@ public abstract class RequestFragment extends Fragment {
     protected JsonHttpResponseHandlerHelper jsonHttpResponseHandlerHelper = new JsonHttpResponseHandlerHelper(new OnDoneObjectListener() {
         @Override
         public void onDone(final Object object, final int statusCode) {
-           /* if (Config.threadSleep) {
-                Utils.threadSleep(new OnDoneListener() {
-                    @Override
-                    public void onDone() {
-                        parseResponse(object, statusCode);
-                    }
-                });
-            } else { fixme ewentualnie odkomentowac jakbym jednak chcial sleepa ;)*/
             parseResponse(object, statusCode);
 //            }
         }

@@ -186,40 +186,4 @@ public class RoutePointsRecyclerViewAdapter
             }
         }
     }
-
-    /*private class MoveDownRoutePointClickListener implements View.OnClickListener {
-        private final RoutePoint routePoint;
-
-        public MoveDownRoutePointClickListener(RoutePoint routePoint) {
-            this.routePoint = routePoint;
-        }
-
-        @Override
-        public void onClick(View view) {
-            int index = route.getRoutePoints().indexOf(routePoint);
-            if(index != -1 && index != route.getRoutePoints().size() -1){
-                Collections.swap(route.getRoutePoints(),index,index + 1);
-                AddRoutePointsActivity.updateRoute(appCompatActivity,route);
-                notifyItemMoved(index, index + 1);
-            }
-        }
-    }
-
-    private class MoveUpRoutePointClickListener implements View.OnClickListener {
-        private final RoutePoint routePoint;
-
-        public MoveUpRoutePointClickListener(RoutePoint routePoint) {
-            this.routePoint = routePoint;
-        }
-
-        @Override
-        public void onClick(View view) {
-            int index = route.getRoutePoints().indexOf(routePoint);
-            if(index != -1 && index != 0){
-                Collections.swap(route.getRoutePoints(),index,index -1);
-                AddRoutePointsActivity.updateRoute(appCompatActivity,route);
-                notifyItemMoved(index, index - 1);
-            }
-        }
-    }*/
 }

@@ -178,12 +178,12 @@ public class AddOrUpdateNewRouteActivity extends AppCompatActivity implements Ti
     }
 
     private void disableAddRouteButton() {
-        unavailableAddRouteButton.setVisibility(View.VISIBLE);//todo ewentualna animacja
+        unavailableAddRouteButton.setVisibility(View.VISIBLE);
         availableAddRouteButton.setVisibility(View.GONE);
     }
 
     private void enableAddRouteButton() {
-        unavailableAddRouteButton.setVisibility(View.GONE);//todo ewentualna animacja
+        unavailableAddRouteButton.setVisibility(View.GONE);
         availableAddRouteButton.setVisibility(View.VISIBLE);
     }
 

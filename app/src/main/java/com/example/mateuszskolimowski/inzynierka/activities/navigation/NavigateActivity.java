@@ -85,7 +85,6 @@ public class NavigateActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode == GOOGLE_NAVIGATION_INTENT_REQUEST_CODE) {
             showAddToCalendarDialog();
-            sendToServerActualRoute();
         }
     }
 
@@ -120,10 +119,6 @@ public class NavigateActivity extends AppCompatActivity {
             }
         }
         return null;
-    }
-
-    private void sendToServerActualRoute() {
-        //fixme wyslac do serwera ktore punkty trasy sa odznaczone
     }
 
     private void showAddToCalendarDialog() {

@@ -54,7 +54,6 @@ import android.support.v7.app.AlertDialog;
  * final String messageThatPermissionIsMustHaveMessage,
  * final OnPermissionResultListener onPermissionResultListener) {
  *
- * todo dodac instrukcje korzystania z fragmentu
  */
 
 public class PermissionsUtils {

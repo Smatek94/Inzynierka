@@ -3,6 +3,8 @@ package com.example.mateuszskolimowski.inzynierka.model;
 import android.os.Parcel;
 import android.os.Parcelable;
 
+import com.example.mateuszskolimowski.inzynierka.utils.Utils;
+
 /**
  * wykorzystywana na dwa sposoby.
  * 1. jako odleglosc miedzy punktem a jego destinationPlaceId

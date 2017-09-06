@@ -58,7 +58,7 @@ public class AddToCalendarDialog extends DialogFragment {
 
     private void setUpGUI(RoutePoint routePoint) {
         titleEditText.setText(routePoint.getPlaceName());
-        descriptionEditText.setText("Miejsce " + routePoint.getPlaceName() + " odwiedzone o " + getActualTime() + " przy pomocy aplikacji Inzynierka"); //fixme zmienic inzynierka
+        descriptionEditText.setText("Miejsce " + routePoint.getPlaceName() + " odwiedzone o " + getActualTime() + " przy pomocy aplikacji Inzynierka");
         okTextView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
